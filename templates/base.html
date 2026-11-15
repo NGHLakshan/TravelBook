@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CeylonGo - Sri Lanka Tours, Villas, Cabs & Activities{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        klook: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#FF5B00',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        },
+                        brand: {
+                            dark: '#1A1D20',
+                            gray: '#6E747B',
+                            light: '#F8F9FA'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet CSS for Interactive Destination Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        input, button, select, textarea {
+            font-family: inherit;
+        }
+        html { scroll-behavior: smooth; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .klook-shadow { box-shadow: 0 4px 20px -2px rgba(17, 24, 39, 0.08); }
+        .klook-shadow-hover:hover { box-shadow: 0 12px 30px -4px rgba(255, 91, 0, 0.15); }
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .snap-mandatory {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .snap-start {
+            scroll-snap-align: start;
+        }
+        /* 3D Game / Adventure Map Styling */
+        #sriLankaMap {
+            width: 100%;
+            height: 100%;
+            min-height: 380px;
+            background: #aadaff;
+        }
+        .leaflet-container {
+            font-family: inherit;
+        }
+        .game-badge-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+        .game-badge-wrapper {
+            transform: translate(-50%, -50%);
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        /* DEFAULT & ZOOM-OUT (Zoom <= 9.5) — STRICTLY ZERO LABELS, 100% CLEAN SRI LANKA */
+        .game-pin-label {
+            display: none !important;
+        }
+        .zoom-compact .game-avatar-orb {
+            width: 26px;
+            height: 26px;
+            font-size: 13px;
+            border-width: 2px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        }
+        .zoom-compact .game-pin-label {
+            display: none !important;
+        }
+
+        /* ZOOM-IN DETAILED MODE (Zoom > 9.5) — Sleek short location pill appears beside icon */
+        .zoom-detailed .game-avatar-orb {
+            width: 32px;
+            height: 32px;
+            font-size: 15px;
+            border-width: 2px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+        }
+        .zoom-detailed .game-pin-label {
+            display: inline-block !important;
+            margin-top: 3px;
+            background: rgba(15, 23, 42, 0.90);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        /* HOVER INTERACTIVITY (Even when zoomed out): Orb scales & name pops up in bright orange */
+        .game-badge-wrapper:hover .game-pin-label {
+            display: inline-block !important;
+            margin-top: 3px;
+            background: #FF5B00 !important;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            white-space: nowrap;
+            border: 1px solid #ffffff;
+            box-shadow: 0 4px 14px rgba(255,91,0,0.45);
+            transform: scale(1.08);
+            z-index: 99999 !important;
+        }
+
+        /* COLORFUL 3D GEM ORBS */
+        .game-avatar-orb {
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-style: solid;
+            border-color: #ffffff;
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+        }
+        .game-badge-wrapper:hover .game-avatar-orb {
+            transform: scale(1.25) translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 99999 !important;
+        }
+        .orb-orange {
+            background: linear-gradient(135deg, #FF5B00 0%, #ea580c 100%);
+            box-shadow: 0 6px 18px rgba(255, 91, 0, 0.65);
+        }
+        .orb-amber {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.65);
+        }
+        .orb-blue {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.65);
+        }
+        .orb-purple {
+            background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+            box-shadow: 0 6px 18px rgba(147, 51, 234, 0.65);
+        }
+        .orb-teal {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            box-shadow: 0 6px 18px rgba(13, 148, 136, 0.65);
+        }
+        .orb-emerald {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.65);
+        }
+        .orb-cyan {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            box-shadow: 0 6px 18px rgba(6, 182, 212, 0.65);
+        }
+        .game-pulse-glow {
+            animation: pulseGlow 2.2s infinite ease-in-out;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 91, 0, 0.7); }
+            65% { box-shadow: 0 0 0 14px rgba(255, 91, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 91, 0, 0); }
+        }
+
+        /* LOCAL SPOT PINS (Inside Zone — only shown when zoomed in) */
+        .game-spot-pin {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 3px 9px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+            border: 1.5px solid #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            white-space: nowrap;
+            transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.25s ease;
+            cursor: pointer;
+        }
+        .game-spot-pin:hover {
+            transform: scale(1.1) translateY(-2px);
+            border-color: #FF5B00;
+            color: #FF5B00;
+        }
+        /* Hide spot pins text when zoomed out — no clutter on island overview */
+        .zoom-compact .game-spot-pin {
+            display: none !important;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-[#F6F7F9] text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Announcement Bar -->
+    <div class="bg-gradient-to-r from-orange-600 to-amber-500 text-white text-xs sm:text-sm font-semibold py-2 px-4 text-center flex items-center justify-center gap-2">
+        <span>✨ Explore Sri Lanka with Verified Local Hosts & Drivers</span>
+        <span class="hidden md:inline">• 24/7 Dedicated Concierge</span>
+        <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">Best Price Guarantee</span>
+    </div>
+
+    <!-- Main Navigation Header (Klook Style) -->
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Brand Logo -->
+                <div class="flex items-center gap-8">
+                    <a href="{% url 'home' %}" class="flex items-center gap-2 group">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF5B00] to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/30 group-hover:scale-105 transition">
+                            <i class="fa-solid fa-compass text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-2xl font-black tracking-tight text-gray-900">Ceylon<span class="text-[#FF5B00]">Go</span></span>
+                            <span class="hidden sm:block text-[10px] uppercase font-bold tracking-widest text-gray-400">Travel & Experiences</span>
+                        </div>
+                    </a>
+
+                    <!-- Top Search Bar (Desktop) -->
+                    <div class="hidden lg:block relative w-80">
+                        <form action="{% url 'home' %}" method="GET">
+                            <input type="text" name="q" value="{{ search_query|default:'' }}" 
+                                   placeholder="Search tours, attractions, or destinations..." 
+                                   class="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-100/80 border border-transparent rounded-full focus:bg-white focus:border-[#FF5B00] focus:ring-2 focus:ring-orange-100 transition outline-none">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 text-sm"></i>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Navigation Actions -->
+                <div class="flex items-center gap-4 sm:gap-6">
+                    <nav class="hidden md:flex items-center gap-6 text-sm font-bold text-gray-700">
+                        <a href="/#packages-section" class="hover:text-[#FF5B00] transition-colors">Explore Tours</a>
+                        <a href="/#how-it-works" class="hover:text-[#FF5B00] transition-colors">How It Works</a>
+                    </nav>
+
+                    <!-- Interactive Destination Map CTA Button -->
+                    <button type="button" 
+                            onclick="openMapModal()" 
+                            class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 hover:from-[#FF5B00] hover:to-orange-600 text-white shadow-md transition-all duration-300 hover:shadow-orange-500/25 group cursor-pointer border border-gray-700/50">
+                        <i class="fa-solid fa-map-location-dot text-amber-400 group-hover:text-white transition-colors text-sm"></i>
+                        <span>Explore 3D Map</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Block -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer (Klook Inspired) -->
+    <footer class="bg-gray-900 text-gray-400 pt-16 pb-12 border-t border-gray-800 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+                <!-- Col 1: About -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-[#FF5B00] flex items-center justify-center text-white font-bold">
+                            <i class="fa-solid fa-compass"></i>
+                        </div>
+                        <span class="text-xl font-black text-white">Ceylon<span class="text-[#FF5B00]">Go</span></span>
+                    </div>
+                    <p class="text-sm leading-relaxed text-gray-400 mb-4">
+                        Sri Lanka's premier direct-to-vendor travel booking platform. Enjoy curated villas, reliable chauffeurs, and epic adventures with instant WhatsApp confirmation.
+                    </p>
+                    <div class="flex items-center gap-3 text-lg text-gray-400">
+                        <a href="#" class="hover:text-white transition"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#" class="hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="hover:text-white transition"><i class="fa-brands fa-tiktok"></i></a>
+                        <a href="#" class="hover:text-white transition"><i class="fa-brands fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <!-- Col 2: Top Categories -->
+                <div>
+                    <h4 class="text-white text-sm font-bold uppercase tracking-wider mb-4">Popular Categories</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/?cat=ella-signature" class="hover:text-white transition">🏔️ Ella Signature Experiences</a></li>
+                        <li><a href="/?cat=tea-trails" class="hover:text-white transition">🌿 Tea Trails & Mountain</a></li>
+                        <li><a href="/?cat=nature-waterfalls" class="hover:text-white transition">💦 Nature & Waterfall Escapes</a></li>
+                        <li><a href="/?cat=wildlife-encounters" class="hover:text-white transition">🦌 Wildlife Encounters</a></li>
+                        <li><a href="/?cat=bespoke-journeys" class="hover:text-white transition">🚐 Bespoke Private Journeys</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Why Choose Us -->
+                <div>
+                    <h4 class="text-white text-sm font-bold uppercase tracking-wider mb-4">Why CeylonGo</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> 100% Best Price Guarantee</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> No Sign-Up Needed</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Instant WhatsApp Response</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Hand-picked Local Vendors</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Safe & Secure Transactions</li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Contact -->
+                <div>
+                    <h4 class="text-white text-sm font-bold uppercase tracking-wider mb-4">Customer Support</h4>
+                    <p class="text-sm text-gray-400 mb-4">Have a question or custom itinerary request? Message our travel concierge anytime.</p>
+                    <a href="https://wa.me/{{ admin_phone|default:'94770000000' }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#25D366] text-white text-sm font-bold hover:bg-green-600 transition shadow-lg shadow-green-900/30">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        Chat on WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-gray-800 text-center text-xs text-gray-500 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p>&copy; 2026 CeylonGo Travel Platform. All rights reserved.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-gray-400">Privacy Policy</a>
+                    <a href="#" class="hover:text-gray-400">Terms of Service</a>
+                    <a href="#" class="hover:text-gray-400">Vendor Inquiries</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+
+    <!-- ===== SEARCH BACKDROP — only dims content BELOW search bar, no ugly full-page blur ===== -->
+    <div id="searchBackdrop"
+         style="display:none; position:fixed; z-index:99998;
+                left:0; right:0; bottom:0;
+                background:rgba(10,15,30,0.55);
+                transition:opacity 0.2s ease;"
+         aria-hidden="true">
+    </div>
+
+    <!-- ===== PORTAL SEARCH DROPDOWN — fixed to body, escapes all parent stacking contexts ===== -->
+    <div id="searchDropdown"
+         style="display:none; position:fixed; z-index:99999; background:#fff; border-radius:20px;
+                box-shadow:0 24px 64px -4px rgba(0,0,0,0.18), 0 8px 24px -4px rgba(255,91,0,0.08);
+                border:1px solid #f1f5f9; overflow-y:auto; max-height:480px; transition:opacity 0.15s ease;"
+         aria-live="polite">
+        <!-- Loading state -->
+        <div id="searchLoading" style="display:none;" class="px-5 py-4 flex items-center gap-3 text-gray-500 text-sm">
+            <i class="fa-solid fa-spinner fa-spin text-[#FF5B00]"></i>
+            <span>Searching...</span>
+        </div>
+        <!-- No results state -->
+        <div id="searchNoResults" style="display:none;" class="px-5 py-8 text-center">
+            <div class="text-3xl mb-2">🔍</div>
+            <p class="text-sm font-bold text-gray-700" id="noResultsText">No matches found</p>
+            <p class="text-xs text-gray-400 mt-1">Try a different keyword or browse categories below</p>
+        </div>
+        <!-- Results list -->
+        <div id="searchResultsList"></div>
+    </div>
+
+    <!-- ===== LEAFLET JS FOR 3D DESTINATION MAP ===== -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- ===== 3D SRI LANKA DESTINATION EXPLORER MODAL ===== -->
+    <div id="destinationMapModal" 
+         class="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
+         style="display:none;"
+         aria-modal="true" role="dialog">
+        
+        <div class="bg-white w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] border border-gray-100">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 bg-gray-900 text-white flex items-center justify-between border-b border-gray-800 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF5B00] to-amber-500 flex items-center justify-center text-white text-lg shadow-md">
+                        <i class="fa-solid fa-earth-asia"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base sm:text-lg font-black tracking-tight text-white">Sri Lanka Interactive Destination Map</h3>
+                            <span class="text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full hidden sm:inline-block">Live Coverage</span>
+                        </div>
+                        <p class="text-xs text-gray-400">Click any destination pin or region pill to explore verified tours & key attractions</p>
+                    </div>
+                </div>
+
+                <button type="button" 
+                        onclick="closeMapModal()" 
+                        class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Quick Region Filter Pills -->
+            <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200/80 flex items-center justify-between gap-2 flex-shrink-0 overflow-x-auto no-scrollbar">
+                <div class="flex items-center gap-1.5 min-w-max py-0.5">
+                    <button type="button" data-zone="all" onclick="focusDestination('all')" class="zone-pill px-3 py-1 rounded-full text-xs font-black bg-gray-900 text-white border border-gray-900 whitespace-nowrap transition cursor-pointer shadow-sm">
+                        🗺️ All Island
+                    </button>
+
+                    <span class="text-[10px] font-black uppercase tracking-wider text-orange-600 bg-orange-100/90 px-2 py-0.5 rounded-md whitespace-nowrap select-none ml-1">
+                        ⭐ OUR DIRECT HUBS:
+                    </span>
+                    <button type="button" data-zone="ella_nuwara_eliya" onclick="focusDestination('ella_nuwara_eliya')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-orange-50 text-gray-800 border border-gray-200 whitespace-nowrap transition cursor-pointer">
+                        🏔️ Ella & Nuwara Eliya
+                    </button>
+                    <button type="button" data-zone="south_coast_yala" onclick="focusDestination('south_coast_yala')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-orange-50 text-gray-800 border border-gray-200 whitespace-nowrap transition cursor-pointer">
+                        🦌 South Coast & Yala Safari
+                    </button>
+                    <button type="button" data-zone="colombo_west" onclick="focusDestination('colombo_west')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap transition cursor-pointer">
+                        🚐 Private Cabs & Chauffeurs
+                    </button>
+
+                    <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 whitespace-nowrap select-none ml-2">
+                        EXPLORE ZONES:
+                    </span>
+                    <button type="button" data-zone="cultural_triangle" onclick="focusDestination('cultural_triangle')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap transition cursor-pointer">
+                        🏛️ Cultural Triangle (11)
+                    </button>
+                    <button type="button" data-zone="kandy_hills" onclick="focusDestination('kandy_hills')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap transition cursor-pointer">
+                        👑 Kandy & Hills (15)
+                    </button>
+                    <button type="button" data-zone="east_coast" onclick="focusDestination('east_coast')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap transition cursor-pointer">
+                        🏄 East Coast (6)
+                    </button>
+                    <button type="button" data-zone="rainforest_nature" onclick="focusDestination('rainforest_nature')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap transition cursor-pointer">
+                        🌳 Rainforest & Nature (3)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Split: Map on left, Destination & 77 Spots Info Card on right) -->
+            <div class="flex-grow flex flex-col md:flex-row min-h-0 relative">
+                <!-- Interactive Map Canvas -->
+                <div class="flex-grow h-[380px] md:h-[540px] relative">
+                    <div id="sriLankaMap" class="w-full h-full"></div>
+
+                    <!-- Floating Map Theme Switcher (Ultra Colorful 3D Views) -->
+                    <div class="absolute top-3 right-3 z-[1000] bg-white/95 backdrop-blur-md p-1 rounded-2xl border border-gray-200/90 shadow-lg flex items-center gap-1">
+                        <button type="button" onclick="switchMapTheme('osm')" id="btnThemeOsm" class="theme-btn px-2.5 py-1 rounded-xl text-xs font-black bg-[#FF5B00] text-white transition shadow-sm cursor-pointer">
+                            🌿 Vibrant Topo
+                        </button>
+                        <button type="button" onclick="switchMapTheme('natgeo')" id="btnThemeNatgeo" class="theme-btn px-2.5 py-1 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer">
+                            🗺️ NatGeo Map
+                        </button>
+                        <button type="button" onclick="switchMapTheme('satellite')" id="btnThemeSatellite" class="theme-btn px-2.5 py-1 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer">
+                            🛰️ 3D Satellite
+                        </button>
+                    </div>
+
+                    <!-- Floating Quick Zoom & Reset Controls -->
+                    <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5">
+                        <button type="button" onclick="zoomInMap()" title="Smooth Zoom In" class="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200/90 shadow-md text-gray-700 hover:text-[#FF5B00] flex items-center justify-center font-black text-sm transition hover:scale-105 cursor-pointer">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                        </button>
+                        <button type="button" onclick="zoomOutMap()" title="Smooth Zoom Out" class="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200/90 shadow-md text-gray-700 hover:text-[#FF5B00] flex items-center justify-center font-black text-sm transition hover:scale-105 cursor-pointer">
+                            <i class="fa-solid fa-minus text-xs"></i>
+                        </button>
+                        <button type="button" onclick="focusDestination('all')" title="Reset Island View" class="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200/90 shadow-md text-gray-700 hover:text-[#FF5B00] flex items-center justify-center font-black text-xs transition hover:scale-105 cursor-pointer">
+                            <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+                        </button>
+                    </div>
+
+                    <!-- Map overlay helper badge -->
+                    <div class="absolute bottom-3 left-3 z-[1000] pointer-events-none bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-md flex items-center gap-2 text-xs font-bold text-gray-700 hidden sm:flex">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Interactive 3D Game Map • Smooth Zoom & Pan</span>
+                    </div>
+                </div>
+
+                <!-- Destination Detail Sidebar -->
+                <div id="destSidebar" class="w-full md:w-80 lg:w-[380px] bg-white border-t md:border-t-0 md:border-l border-gray-100 flex flex-col justify-between overflow-hidden flex-shrink-0">
+                    <!-- Top Zone Info Header -->
+                    <div class="p-4 border-b border-gray-100 flex-shrink-0">
+                        <div class="h-32 sm:h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2.5 relative shadow-sm">
+                            <img id="destImg" src="https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80" alt="" class="w-full h-full object-cover">
+                            <span id="destBadge" class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#FF5B00] text-white shadow">
+                                ⭐ VERIFIED DIRECT HUB
+                            </span>
+                        </div>
+                        <h4 id="destTitle" class="text-base sm:text-lg font-black text-gray-900 leading-snug">🏔️ Ella & Nuwara Eliya Zone</h4>
+                        <p id="destDesc" class="text-xs text-gray-500 mt-1 leading-relaxed">
+                            Our primary flagship hub! Mist-covered mountain summits, direct verified guides, waterfalls, and tea estate trails.
+                        </p>
+
+                        <!-- Search Filter for Spots -->
+                        <div class="mt-3 relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" 
+                                   id="spotSearchInput" 
+                                   oninput="filterTouristSpots(this.value)" 
+                                   placeholder="Search tourist spots in Sri Lanka..." 
+                                   class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:border-[#FF5B00] bg-gray-50/50">
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Spots List (All 77 Spots) -->
+                    <div class="flex-grow overflow-y-auto p-4 space-y-2 max-h-[220px] md:max-h-[240px]">
+                        <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-1">
+                            <span id="spotsCountLabel">Attractions to Explore:</span>
+                            <span class="text-orange-600 font-black" id="spotsCountBadge">9 Places</span>
+                        </div>
+                        <div id="destSpotsList" class="space-y-1.5">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Bottom Action Buttons -->
+                    <div class="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2 flex-shrink-0">
+                        <button id="destActionBtn" 
+                                type="button" 
+                                onclick="viewRegionTours('ella_nuwara_eliya')" 
+                                class="w-full py-2.5 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-bold text-xs sm:text-sm transition shadow-md shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer">
+                            <span>Explore Experiences in this Zone</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                        <a id="destWhatsappBtn" 
+                           href="https://wa.me/94770000000?text=Hello%20CeylonGo%2C%20I%20would%20like%20to%20plan%20a%20tour%20or%20private%20ride%20in%20Ella%20%26%20Nuwara%20Eliya" 
+                           target="_blank" 
+                           class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer text-center">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>Inquire / Custom Route via WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Logic Script -->
+    <script>
+        // ALL 77 TOURIST PLACES CATEGORIZED INTO 7 REGIONS
+        const SRI_LANKA_REGIONS_DATA = {
+            cultural_triangle: {
+                id: "cultural_triangle",
+                title: "🏛️ Cultural Triangle & North Central",
+                badge: "🏛️ HISTORIC HERITAGE REGION",
+                badgeColor: "bg-purple-600",
+                isCoreHub: false,
+                coords: [8.0500, 80.7000],
+                zoom: 10,
+                img: "https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80",
+                desc: "Ancient kings, 5th-century sky-fortresses, massive rock cave temples, and sacred Buddhist ruins connected by our private chauffeur cars.",
+                filterQuery: "sigiriya",
+                catSlug: "heritage-culture",
+                btnText: "Explore Heritage & Culture Tours ➔",
+                waQuery: "Cultural Triangle (Sigiriya, Dambulla, Polonnaruwa)",
+                spots: [
+                    { name: "Sigiriya Rock Fortress", type: "World Wonder", coords: [7.9570, 80.7603], icon: "🦁" },
+                    { name: "Sigiriya Museum", type: "Museum & Archaeology", coords: [7.9540, 80.7550], icon: "🏛️" },
+                    { name: "Pidurangala Rock", type: "Sunrise Viewpoint", coords: [7.9654, 80.7634], icon: "🌄" },
+                    { name: "Dambulla Golden Cave Temple", type: "Sacred Temple", coords: [7.8567, 80.6485], icon: "🛕" },
+                    { name: "Polonnaruwa Sacred City", type: "Ancient Capital", coords: [7.9403, 81.0188], icon: "🏛️" },
+                    { name: "Gal Viharaya", type: "Carved Granite Buddhas", coords: [7.9647, 81.0042], icon: "🪨" },
+                    { name: "Ruwanwelisaya", type: "Great Stupa", coords: [8.3500, 80.3964], icon: "☸️" },
+                    { name: "Mahamevnawa Monastery", type: "Buddhist Meditation", coords: [8.3610, 80.4020], icon: "🙏" },
+                    { name: "Yapahuwa Rock Fortress", type: "Medieval Citadel", coords: [7.8105, 80.3120], icon: "🏰" },
+                    { name: "Minneriya National Park", type: "Elephant Gathering", coords: [8.0333, 80.9000], icon: "🐘" },
+                    { name: "Kaudulla National Park", type: "Wild Elephant Safari", coords: [8.1400, 80.9100], icon: "🚙" }
+                ]
+            },
+            kandy_hills: {
+                id: "kandy_hills",
+                title: "👑 Kandy & Central Hill Country",
+                badge: "👑 SACRED ROYAL HIGHLANDS",
+                badgeColor: "bg-indigo-600",
+                isCoreHub: false,
+                coords: [7.2906, 80.6337],
+                zoom: 11,
+                img: "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
+                desc: "Last royal capital of Ceylon surrounded by mist-capped ranges, botanical gardens, and the starting station of the world-famous Blue Train.",
+                filterQuery: "kandy",
+                catSlug: "heritage-culture",
+                btnText: "Explore Kandy & Hill Experiences ➔",
+                waQuery: "Kandy and the Central Hill Country",
+                spots: [
+                    { name: "Kandy Temple of the Tooth", type: "UNESCO Sacred Relic", coords: [7.2936, 80.6413], icon: "👑" },
+                    { name: "Kandy Lake", type: "Royal Scenic Lake", coords: [7.2906, 80.6385], icon: "🌊" },
+                    { name: "Arthur’s Seat, Kandy", type: "Panoramic City Lookout", coords: [7.2870, 80.6360], icon: "🔭" },
+                    { name: "Kandy View Point", type: "Hill Viewpoint", coords: [7.2865, 80.6375], icon: "🌅" },
+                    { name: "Bahiravokanda Vihara Buddha Statue", type: "Colossal White Buddha", coords: [7.2965, 80.6277], icon: "☸️" },
+                    { name: "Royal Palace of Kandy", type: "Last Kingdom Palace", coords: [7.2945, 80.6420], icon: "🏛️" },
+                    { name: "International Buddhist Museum", type: "World Buddhist Culture", coords: [7.2938, 80.6425], icon: "🏛️" },
+                    { name: "Royal Botanic Gardens (Peradeniya)", type: "Botanical Canopy & Orchids", coords: [7.2717, 80.5956], icon: "🌸" },
+                    { name: "Udawattakele Forest Reserve", type: "Royal Sanctuary Forest", coords: [7.2989, 80.6433], icon: "🌳" },
+                    { name: "Embekke Dewalaya", type: "Ancient Wood Carvings", coords: [7.2183, 80.5678], icon: "🪵" },
+                    { name: "Knuckles Mountain Range", type: "Cloud Forest Trekking", coords: [7.4667, 80.7833], icon: "⛰️" },
+                    { name: "Adam’s Peak (Sri Pada)", type: "Sacred Sunrise Pilgrimage", coords: [6.8096, 80.4994], icon: "🌄" },
+                    { name: "Dhowa Rock Temple", type: "Historic Mahayana Carving", coords: [6.8678, 81.0125], icon: "🛕" },
+                    { name: "Mahiyanganaya Sorabora Lake", type: "Ancient Water Reservoir", coords: [7.3200, 81.0250], icon: "⛵" },
+                    { name: "Rose Quartz Mountain", type: "Pink Quartz Forest Ridge", coords: [7.0500, 80.6000], icon: "💎" }
+                ]
+            },
+            ella_nuwara_eliya: {
+                id: "ella_nuwara_eliya",
+                title: "🏔️ Ella, Nuwara Eliya & Upper Hills",
+                badge: "⭐ VERIFIED CORE HUB",
+                badgeColor: "bg-[#FF5B00]",
+                isCoreHub: true,
+                coords: [6.8900, 80.9500],
+                zoom: 12,
+                img: "https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=800&q=80",
+                desc: "Our flagship operations hub! Direct verified local guides, tea estate tastings, breathtaking waterfalls, hiking summits, and scenic train tickets.",
+                filterQuery: "ella",
+                catSlug: "ella-signature",
+                btnText: "Explore All Ella & Hill Experiences ➔",
+                waQuery: "Ella and Nuwara Eliya Core Zone",
+                spots: [
+                    { name: "Ella Rock", type: "Mountain Trail Summit", coords: [6.8522, 81.0494], icon: "🧗" },
+                    { name: "Nine Arches Bridge", type: "Iconic Blue Train Viaduct", coords: [6.8768, 81.0608], icon: "🚂" },
+                    { name: "Ravana Falls", type: "Legendary Cascade & Cave", coords: [6.8406, 81.0531], icon: "💦" },
+                    { name: "Little Adam's Peak", type: "Panoramic Sunset Hike", coords: [6.8622, 81.0583], icon: "⛰️" },
+                    { name: "Pedro Tea Estate", type: "Tea Factory & Plucking", coords: [6.9744, 80.8033], icon: "🌿" },
+                    { name: "Gregory Lake", type: "Boating & Waterfront Cafe", coords: [6.9536, 80.7786], icon: "🚣" },
+                    { name: "St. Clair’s Falls", type: "Little Niagara of Lanka", coords: [6.9500, 80.6333], icon: "💦" },
+                    { name: "Horton Plains National Park", type: "Plateau Cloud Forest", coords: [6.8028, 80.8053], icon: "🦌" },
+                    { name: "World’s End", type: "870m Sheer Cliff Precipice", coords: [6.7867, 80.7933], icon: "🌄" }
+                ]
+            },
+            colombo_west: {
+                id: "colombo_west",
+                title: "🚐 Colombo, Kandy Road & West Coast",
+                badge: "🚗 CONNECTING TRAVEL SERVICE",
+                badgeColor: "bg-blue-600",
+                isCoreHub: true,
+                coords: [6.9271, 79.9000],
+                zoom: 10,
+                img: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
+                desc: "Island-wide private chauffeur rides! AC luxury KDH vans & cars connecting Colombo Airport (CMB) with Ella, Nuwara Eliya, Yala, and the beaches.",
+                filterQuery: "airport",
+                catSlug: "bespoke-journeys",
+                btnText: "Book Private Transfer / Ride ➔",
+                waQuery: "Private Airport & Highway Chauffeur Service",
+                spots: [
+                    { name: "Galle Face Green", type: "Sunset Promenade & Street Food", coords: [6.9271, 79.8444], icon: "🌅" },
+                    { name: "Gangaramaya Temple", type: "Iconic Buddhist Shrine & Artifacts", coords: [6.9167, 79.8597], icon: "🛕" },
+                    { name: "Beira Lake", type: "Floating Seema Malaka Temple", coords: [6.9240, 79.8520], icon: "🌊" },
+                    { name: "National Museum of Colombo", type: "Ceylon Royal Regalia & History", coords: [6.9100, 79.8608], icon: "🏛️" },
+                    { name: "Sri Lanka Cricket Museum", type: "Cricket Heritage & Trophies", coords: [6.9067, 79.8650], icon: "🏏" },
+                    { name: "Independence Memorial Hall", type: "Colonial Architectural Monument", coords: [6.9042, 79.8675], icon: "🏛️" },
+                    { name: "Viharamahadevi Park", type: "City Botanical Canopy & Fountains", coords: [6.9139, 79.8617], icon: "🌳" },
+                    { name: "Pettah Market", type: "Bustling Trade Bazaar & Spices", coords: [6.9389, 79.8539], icon: "🛍️" },
+                    { name: "Red Mosque (Jami Ul-Alfar)", type: "Candy-Striped Architectural Jewel", coords: [6.9383, 79.8519], icon: "🕌" },
+                    { name: "St Anthony’s Church", type: "Historic Catholic Shrine", coords: [6.9450, 79.8600], icon: "⛪" },
+                    { name: "Commonwealth War Cemetery", type: "Memorial Park", coords: [6.8900, 79.8800], icon: "🕊️" },
+                    { name: "Dehiwala Zoo", type: "National Zoological Gardens", coords: [6.8569, 79.8731], icon: "🦁" },
+                    { name: "Kelaniya Raja Maha Vihara", type: "Sacred Stupa & Frescoes", coords: [6.9547, 79.9214], icon: "🛕" },
+                    { name: "Pinnawala Elephant Orphanage", type: "River Bathing Elephants", coords: [7.3008, 80.3867], icon: "🐘" },
+                    { name: "Panadura Beach", type: "Coastal Sunset Shoreline", coords: [6.7133, 79.9047], icon: "🏖️" },
+                    { name: "Moragalla Beach", type: "Calm Golden Lagoon Bay", coords: [6.4400, 79.9900], icon: "🌴" },
+                    { name: "Bentota Beach", type: "Watersports & Luxury Resorts", coords: [6.4258, 79.9983], icon: "🚤" },
+                    { name: "Kande Vihara", type: "Gigantic Seated Buddha Statue", coords: [6.4442, 80.0078], icon: "☸️" },
+                    { name: "Kosgoda Sea Turtle Hatchery", type: "Turtle Conservation & Release", coords: [6.3392, 80.0336], icon: "🐢" },
+                    { name: "Hikkaduwa Beach", type: "Coral Reef Snorkeling & Surf", coords: [6.1395, 80.1063], icon: "🤿" }
+                ]
+            },
+            south_coast_yala: {
+                id: "south_coast_yala",
+                title: "🦌 South Coast: Galle to Yala",
+                badge: "⭐ VERIFIED CORE HUB",
+                badgeColor: "bg-amber-600",
+                isCoreHub: true,
+                coords: [6.1000, 80.8500],
+                zoom: 10,
+                img: "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+                desc: "Our wildlife and coastal paradise hub! Direct 4x4 modified safari jeeps, leopard trackers, Galle Fort walks, and whale cruises.",
+                filterQuery: "wildlife",
+                catSlug: "wildlife-encounters",
+                btnText: "Explore Yala Safari & Coast Packages ➔",
+                waQuery: "South Coast (Galle, Mirissa, Yala Safari)",
+                spots: [
+                    { name: "Galle Dutch Fort", type: "17th-Century UNESCO Fortress", coords: [6.0272, 80.2170], icon: "🏰" },
+                    { name: "Galle Fort Lighthouse", type: "Iconic Seaside Beacon", coords: [6.0247, 80.2183], icon: "🗼" },
+                    { name: "Unawatuna Beach", type: "Turquoise Swimming Bay", coords: [6.0108, 80.2483], icon: "🏖️" },
+                    { name: "Jungle Beach", type: "Secluded Coral Cove", coords: [6.0150, 80.2400], icon: "🌴" },
+                    { name: "Koggala Beach", type: "Stilt Fishermen Heritage", coords: [5.9900, 80.3300], icon: "🎣" },
+                    { name: "Mirissa Beach", type: "Beach Cafes & Surf", coords: [5.9483, 80.4578], icon: "🏄" },
+                    { name: "Coconut Tree Hill", type: "Iconic Palm Cliff Lookout", coords: [5.9422, 80.4633], icon: "🌴" },
+                    { name: "Secret Beach Mirissa", type: "Tide Pool Hideaway", coords: [5.9467, 80.4489], icon: "🌊" },
+                    { name: "Polhena Beach", type: "Reef Swimming & Sea Turtles", coords: [5.9333, 80.5200], icon: "🐢" },
+                    { name: "Dondra Lighthouse", type: "Southernmost Tip of Sri Lanka", coords: [5.9239, 80.5906], icon: "🗼" },
+                    { name: "Hiriketiya Beach", type: "Horseshoe Bay & Surf Culture", coords: [5.9622, 80.6869], icon: "🏄" },
+                    { name: "Bundala National Park", type: "UNESCO Wetland & Flamingos", coords: [6.1833, 81.2167], icon: "🦚" },
+                    { name: "Yala National Park Safari", type: "World Highest Leopard Density", coords: [6.3687, 81.5204], icon: "🐆" }
+                ]
+            },
+            east_coast: {
+                id: "east_coast",
+                title: "🏄 East Coast: Trincomalee to Arugam Bay",
+                badge: "🌊 TROPICAL SURF & MARINE COAST",
+                badgeColor: "bg-teal-600",
+                isCoreHub: false,
+                coords: [7.8000, 81.5000],
+                zoom: 9,
+                img: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+                desc: "World-class point breaks at Arugam Bay, crystal clear coral snorkeling at Pigeon Island, and peaceful secluded safari reserves.",
+                filterQuery: "scenic",
+                catSlug: "scenic-dining",
+                btnText: "Explore East Coast Packages ➔",
+                waQuery: "East Coast (Trincomalee, Nilaveli, Arugam Bay)",
+                spots: [
+                    { name: "Fort Frederick, Trincomalee", type: "Clifftop Dutch Fort & Koneswaram", coords: [8.5778, 81.2406], icon: "🏰" },
+                    { name: "Nilaveli Beach", type: "Pure White Sand Shoreline", coords: [8.7100, 81.1900], icon: "🏖️" },
+                    { name: "Pigeon Island", type: "Marine National Park & Shark Reef", coords: [8.7200, 81.2000], icon: "🤿" },
+                    { name: "Arugam Bay Beaches", type: "World Top 10 Surf Point Break", coords: [6.8425, 81.8344], icon: "🏄" },
+                    { name: "Kumana National Park", type: "Bird Migratory Sanctuary & Safari", coords: [6.5167, 81.7000], icon: "🦅" },
+                    { name: "Gal Oya National Park", type: "Boat Safari & Swimming Elephants", coords: [7.2167, 81.4667], icon: "⛵" }
+                ]
+            },
+            rainforest_nature: {
+                id: "rainforest_nature",
+                title: "🌳 Rainforest & Other National Parks",
+                badge: "🌿 UNESCO VIRGIN NATURE",
+                badgeColor: "bg-emerald-700",
+                isCoreHub: false,
+                coords: [7.1000, 80.4000],
+                zoom: 9,
+                img: "https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80",
+                desc: "Primary virgin tropical rainforests with 95% endemic birds and mega wildlife sanctuaries harboring giant herds of wild Asian elephants.",
+                filterQuery: "wildlife",
+                catSlug: "wildlife-encounters",
+                btnText: "Explore Nature & Wildlife Safaris ➔",
+                waQuery: "Rainforest & Nature Parks (Sinharaja, Wilpattu, Udawalawe)",
+                spots: [
+                    { name: "Sinharaja Forest Reserve", type: "UNESCO Primary Virgin Rainforest", coords: [6.4167, 80.4667], icon: "🌳" },
+                    { name: "Wilpattu National Park", type: "Ancient Villu Lakes & Leopards", coords: [8.4500, 80.0333], icon: "🐆" },
+                    { name: "Udawalawe National Park", type: "Elephant Transit & Safari Basin", coords: [6.4744, 80.8986], icon: "🐘" }
+                ]
+            }
+        };
+
+        // ILLUSTRATED 3D GAME-STYLE LANDMARKS (Directly on Map Canvas)
+        const GAME_LANDMARKS = [
+            { name: "🦁 Sigiriya Lion Rock", short: "Sigiriya", coords: [7.9570, 80.7603], zone: "cultural_triangle", color: "orb-purple", core: false },
+            { name: "🚂 Ella Nine Arch", short: "Ella", coords: [6.8768, 81.0608], zone: "ella_nuwara_eliya", color: "orb-orange", core: true },
+            { name: "🌿 Nuwara Eliya Tea Hills", short: "Nuwara Eliya", coords: [6.9536, 80.7786], zone: "ella_nuwara_eliya", color: "orb-emerald", core: true },
+            { name: "🐆 Yala Safari", short: "Yala Safari", coords: [6.3687, 81.5204], zone: "south_coast_yala", color: "orb-amber", core: true },
+            { name: "👑 Kandy Sacred City", short: "Kandy", coords: [7.2936, 80.6413], zone: "kandy_hills", color: "orb-purple", core: false },
+            { name: "🚐 Colombo Airport VIP Cabs", short: "Colombo VIP Cabs", coords: [7.1808, 79.8841], zone: "colombo_west", color: "orb-blue", core: true },
+            { name: "🏰 Galle Dutch Fort", short: "Galle Fort", coords: [6.0272, 80.2170], zone: "south_coast_yala", color: "orb-cyan", core: false },
+            { name: "🐋 Mirissa Blue Whales", short: "Mirissa", coords: [5.9483, 80.4578], zone: "south_coast_yala", color: "orb-cyan", core: false },
+            { name: "🏄 Arugam Bay", short: "Arugam Bay", coords: [6.8425, 81.8344], zone: "east_coast", color: "orb-teal", core: false },
+            { name: "🐘 Minneriya Elephants", short: "Minneriya", coords: [8.0333, 80.9000], zone: "cultural_triangle", color: "orb-purple", core: false },
+            { name: "⛰️ Adam's Peak (Sri Pada)", short: "Adam's Peak", coords: [6.8096, 80.4994], zone: "kandy_hills", color: "orb-purple", core: false },
+            { name: "🌴 Bentota Golden Coast", short: "Bentota", coords: [6.4258, 79.9983], zone: "colombo_west", color: "orb-blue", core: false },
+            { name: "🌳 Sinharaja Rainforest", short: "Sinharaja", coords: [6.4167, 80.4667], zone: "rainforest_nature", color: "orb-emerald", core: false },
+            { name: "🐘 Udawalawe Safari", short: "Udawalawe", coords: [6.4744, 80.8986], zone: "rainforest_nature", color: "orb-amber", core: false },
+            { name: "🛕 Polonnaruwa", short: "Polonnaruwa", coords: [7.9403, 81.0188], zone: "cultural_triangle", color: "orb-purple", core: false },
+            { name: "🏖️ Trincomalee & Pigeon Island", short: "Trincomalee", coords: [8.5778, 81.2406], zone: "east_coast", color: "orb-teal", core: false }
+        ];
+
+        const MAP_THEMES = {
+            osm: {
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+                attribution: 'Tiles &copy; Esri &mdash; Topographic Adventure Map',
+                subdomains: ''
+            },
+            natgeo: {
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
+                attribution: 'Tiles &copy; National Geographic, Esri &mdash; Topo Relief',
+                subdomains: ''
+            },
+            satellite: {
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: 'Tiles &copy; Esri &mdash; 3D Satellite Aerial',
+                subdomains: ''
+            }
+        };
+
+        const SRI_LANKA_BOUNDS = [[5.85, 79.6], [9.88, 81.9]];
+        let leafletMapInstance = null;
+        let currentTileLayer = null;
+        let activeThemeKey = 'osm';
+        let landmarkMarkers = [];
+        let spotMarkers = [];
+        let activeZoneKey = 'all';
+
+        function updateZoomLevelClass() {
+            if (!leafletMapInstance) return;
+            const currentZoom = leafletMapInstance.getZoom();
+            const mapEl = document.getElementById('sriLankaMap');
+            if (!mapEl) return;
+
+            // Zoom <= 9.5 → compact island overview: only glowing icon dots, ZERO text labels
+            // Zoom >  9.5 → detailed zone view: short name pill appears below each icon
+            if (currentZoom <= 9.5) {
+                mapEl.classList.add('zoom-compact');
+                mapEl.classList.remove('zoom-detailed');
+
+                // Auto-clear zone spots & circle when user zooms back out to island overview
+                clearSpotMarkers();
+                if (activeZoneCircle && leafletMapInstance) {
+                    leafletMapInstance.removeLayer(activeZoneCircle);
+                    activeZoneCircle = null;
+                }
+                // Reset active zone key & sidebar to island overview
+                if (activeZoneKey !== 'all') {
+                    activeZoneKey = 'all';
+                    // Reset zone pill highlights
+                    document.querySelectorAll('.zone-pill').forEach(function(pill) {
+                        if (pill.getAttribute('data-zone') === 'all') {
+                            pill.classList.remove('bg-white', 'text-gray-800', 'border-gray-200', 'bg-[#FF5B00]', 'border-[#FF5B00]');
+                            pill.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-sm');
+                        } else {
+                            pill.classList.remove('bg-gray-900', 'bg-[#FF5B00]', 'text-white', 'shadow-sm', 'border-[#FF5B00]', 'border-gray-900');
+                            pill.classList.add('bg-white', 'text-gray-800', 'border-gray-200');
+                        }
+                    });
+                    showAllSriLankaOverview();
+                }
+            } else {
+                mapEl.classList.add('zoom-detailed');
+                mapEl.classList.remove('zoom-compact');
+            }
+        }
+
+        function openMapModal() {
+            const modal = document.getElementById('destinationMapModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(function() {
+                if (!leafletMapInstance) {
+                    initSriLankaMap();
+                } else {
+                    leafletMapInstance.invalidateSize(true);
+                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [30, 30] });
+                    updateZoomLevelClass();
+                }
+            }, 100);
+
+            setTimeout(function() {
+                if (leafletMapInstance) {
+                    leafletMapInstance.invalidateSize(true);
+                    updateZoomLevelClass();
+                }
+            }, 350);
+        }
+
+        function closeMapModal() {
+            const modal = document.getElementById('destinationMapModal');
+            if (modal) modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function switchMapTheme(themeKey) {
+            if (!leafletMapInstance) return;
+            const theme = MAP_THEMES[themeKey] || MAP_THEMES.osm;
+            activeThemeKey = themeKey;
+
+            if (currentTileLayer) {
+                leafletMapInstance.removeLayer(currentTileLayer);
+            }
+
+            const options = {
+                maxZoom: 18,
+                attribution: theme.attribution
+            };
+            if (theme.subdomains) {
+                options.subdomains = theme.subdomains;
+            }
+
+            currentTileLayer = L.tileLayer(theme.url, options).addTo(leafletMapInstance);
+
+            // Update UI buttons
+            document.querySelectorAll('.theme-btn').forEach(function(btn) {
+                btn.classList.remove('bg-[#FF5B00]', 'text-white', 'shadow-sm');
+                btn.classList.add('text-gray-700', 'hover:bg-gray-100');
+            });
+            const activeBtn = document.getElementById('btnTheme' + themeKey.charAt(0).toUpperCase() + themeKey.slice(1));
+            if (activeBtn) {
+                activeBtn.classList.add('bg-[#FF5B00]', 'text-white', 'shadow-sm');
+                activeBtn.classList.remove('text-gray-700', 'hover:bg-gray-100');
+            }
+        }
+
+        function zoomInMap() {
+            if (leafletMapInstance) leafletMapInstance.zoomIn(1);
+        }
+
+        function zoomOutMap() {
+            if (leafletMapInstance) leafletMapInstance.zoomOut(1);
+        }
+
+        function initSriLankaMap() {
+            const mapContainer = document.getElementById('sriLankaMap');
+            if (!mapContainer || leafletMapInstance) return;
+
+            // Start in compact mode (no text boxes, zero clutter)
+            mapContainer.classList.add('zoom-compact');
+
+            // Centered on Sri Lanka island with clean integer zoom 8
+            leafletMapInstance = L.map('sriLankaMap', {
+                center: [8.0, 80.75],
+                zoom: 8,
+                minZoom: 7,
+                maxZoom: 18,
+                zoomControl: false,
+                fadeAnimation: true,
+                zoomAnimation: true,
+                inertia: true,
+                maxBounds: [[4.0, 76.0], [12.5, 85.5]],
+                maxBoundsViscosity: 0.7
+            });
+
+            // Automatically toggle compact vs detailed pins on zoom & move changes
+            leafletMapInstance.on('zoom zoomend moveend', updateZoomLevelClass);
+
+            // Initialize default vibrant Esri Topo layer (100% working, zero blocks)
+            switchMapTheme('osm');
+
+            // Render compact 3D Game-Style Landmark Badges
+            renderGameLandmarks();
+
+            // Fit tightly to Sri Lanka island shape
+            leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [30, 30] });
+
+            // Start in All-Island clean view
+            showAllSriLankaOverview();
+
+            // Ensure tile sizing is immediately recalculated
+            setTimeout(function() {
+                if (leafletMapInstance) {
+                    leafletMapInstance.invalidateSize(true);
+                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [30, 30] });
+                    updateZoomLevelClass();
+                }
+            }, 250);
+
+            // Double-check: force compact labels hidden after all animations settle
+            setTimeout(function() { updateZoomLevelClass(); }, 600);
+            setTimeout(function() { updateZoomLevelClass(); }, 1200);
+        }
+
+        function renderGameLandmarks() {
+            GAME_LANDMARKS.forEach(function(lm) {
+                const iconEmoji = lm.name.split(' ')[0] || '📍';
+                const displayName = lm.short || lm.name.replace(/^[^\s]+\s*/, '');
+                const glowClass = lm.core ? 'game-pulse-glow' : '';
+
+                const html = `
+                    <div class="game-badge-wrapper" title="${lm.name} — Click to explore zone">
+                        <div class="game-avatar-orb ${lm.color || 'orb-orange'} ${glowClass}">
+                            <span>${iconEmoji}</span>
+                        </div>
+                        <span class="game-pin-label">${displayName}</span>
+                    </div>
+                `;
+
+                const icon = L.divIcon({
+                    className: 'game-badge-marker',
+                    html: html,
+                    iconSize: [0, 0],
+                    iconAnchor: [0, 0]
+                });
+
+                const marker = L.marker(lm.coords, { icon: icon }).addTo(leafletMapInstance);
+                marker.on('click', function(e) {
+                    if (e && e.originalEvent) {
+                        L.DomEvent.stopPropagation(e);
+                    }
+                    focusDestination(lm.zone);
+                });
+                landmarkMarkers.push(marker);
+            });
+        }
+
+        function clearSpotMarkers() {
+            spotMarkers.forEach(function(m) {
+                leafletMapInstance.removeLayer(m);
+            });
+            spotMarkers = [];
+        }
+
+        function renderZoneSpotMarkers(region) {
+            clearSpotMarkers();
+            if (!region || !region.spots) return;
+
+            region.spots.forEach(function(spot, index) {
+                const html = `
+                    <div class="game-badge-wrapper" title="${spot.name} (${spot.type})">
+                        <div class="game-spot-pin">
+                            <span class="text-xs">${spot.icon || '📍'}</span>
+                            <span>${spot.name}</span>
+                        </div>
+                    </div>
+                `;
+
+                const icon = L.divIcon({
+                    className: 'game-badge-marker',
+                    html: html,
+                    iconSize: [0, 0],
+                    iconAnchor: [0, 0]
+                });
+
+                const marker = L.marker(spot.coords, { icon: icon }).addTo(leafletMapInstance);
+                marker.on('click', function() {
+                    leafletMapInstance.flyTo(spot.coords, 14, { duration: 1.2, easeLinearity: 0.25 });
+                    highlightSpotCard(spot.name);
+                });
+                spotMarkers.push(marker);
+            });
+        }
+
+        let activeZoneCircle = null;
+
+        function focusDestination(key) {
+            // Update UI buttons with data-zone
+            document.querySelectorAll('.zone-pill').forEach(function(pill) {
+                if (pill.getAttribute('data-zone') === key) {
+                    pill.classList.remove('bg-white', 'text-gray-800', 'border-gray-200');
+                    if (key === 'all') {
+                        pill.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-sm');
+                    } else {
+                        pill.classList.add('bg-[#FF5B00]', 'text-white', 'border-[#FF5B00]', 'shadow-sm');
+                    }
+                } else {
+                    pill.classList.remove('bg-gray-900', 'bg-[#FF5B00]', 'text-white', 'shadow-sm', 'border-[#FF5B00]', 'border-gray-900');
+                    pill.classList.add('bg-white', 'text-gray-800', 'border-gray-200');
+                }
+            });
+
+            // Remove existing glowing zone circle
+            if (activeZoneCircle && leafletMapInstance) {
+                leafletMapInstance.removeLayer(activeZoneCircle);
+                activeZoneCircle = null;
+            }
+
+            if (key === 'all') {
+                if (leafletMapInstance) {
+                    leafletMapInstance.flyTo([7.87, 80.75], 8, { duration: 1.2, easeLinearity: 0.25 });
+                }
+                clearSpotMarkers();
+                activeZoneKey = 'all';
+                showAllSriLankaOverview();
+                return;
+            }
+
+            const region = SRI_LANKA_REGIONS_DATA[key];
+            if (!region || !leafletMapInstance) return;
+
+            activeZoneKey = key;
+            // Ensure zoom is at least 10 so spot labels are visible (zoom-detailed mode)
+            const targetZoom = Math.max(region.zoom || 10, 10);
+            leafletMapInstance.flyTo(region.coords, targetZoom, { duration: 1.4, easeLinearity: 0.25 });
+            
+            // Glowing Game Zone perimeter circle
+            const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
+            activeZoneCircle = L.circle(region.coords, {
+                color: zoneColor,
+                weight: 2,
+                opacity: 0.8,
+                dashArray: '8, 8',
+                fillColor: zoneColor,
+                fillOpacity: 0.08,
+                radius: 28000
+            }).addTo(leafletMapInstance);
+
+            // Render specific spots on map
+            renderZoneSpotMarkers(region);
+
+            // Update sidebar content
+            updateDestSidebar(region);
+        }
+
+        function showAllSriLankaOverview() {
+            document.getElementById('destImg').src = 'https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=800&q=80';
+            const badgeEl = document.getElementById('destBadge');
+            badgeEl.textContent = '🗺️ COMPLETE ISLAND GUIDE';
+            badgeEl.className = 'absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow bg-gray-900';
+
+            document.getElementById('destTitle').textContent = 'Sri Lanka 7 Adventure Zones (77 Attractions)';
+            document.getElementById('destDesc').textContent = 'Explore our verified local network across Ella, Nuwara Eliya, Yala Safari, Colombo VIP Cabs, and every scenic corner of Sri Lanka.';
+
+            const spotsListEl = document.getElementById('destSpotsList');
+            spotsListEl.innerHTML = '';
+
+            let allSpots = [];
+            Object.keys(SRI_LANKA_REGIONS_DATA).forEach(function(rKey) {
+                allSpots = allSpots.concat(SRI_LANKA_REGIONS_DATA[rKey].spots);
+            });
+
+            document.getElementById('spotsCountLabel').textContent = 'Total Sights in Sri Lanka:';
+            document.getElementById('spotsCountBadge').textContent = allSpots.length + ' Places';
+
+            renderSpotsInSidebar(allSpots);
+
+            const actionBtn = document.getElementById('destActionBtn');
+            actionBtn.innerHTML = `<span>Explore All Experiences ➔</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
+            actionBtn.onclick = function() {
+                closeMapModal();
+                window.location.href = '/#packages-section';
+            };
+
+            const waBtn = document.getElementById('destWhatsappBtn');
+            waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent('Hello CeylonGo, I would like to plan a complete Sri Lanka itinerary!');
+        }
+
+        function updateDestSidebar(region) {
+            document.getElementById('destImg').src = region.img;
+
+            const badgeEl = document.getElementById('destBadge');
+            badgeEl.textContent = region.badge;
+            badgeEl.className = 'absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow ' + (region.badgeColor || 'bg-[#FF5B00]');
+
+            document.getElementById('destTitle').textContent = region.title;
+            document.getElementById('destDesc').textContent = region.desc;
+
+            document.getElementById('spotsCountLabel').textContent = 'Attractions in this Zone:';
+            document.getElementById('spotsCountBadge').textContent = (region.spots ? region.spots.length : 0) + ' Places';
+
+            renderSpotsInSidebar(region.spots || []);
+
+            const actionBtn = document.getElementById('destActionBtn');
+            actionBtn.innerHTML = `<span>${region.btnText || 'Explore Experiences'}</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
+            actionBtn.onclick = function() {
+                viewRegionTours(region.id);
+            };
+
+            const waBtn = document.getElementById('destWhatsappBtn');
+            const message = `Hello CeylonGo, I would like to plan a custom journey / chauffeur ride covering ${region.waQuery || region.title}!`;
+            waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(message);
+        }
+
+        function renderSpotsInSidebar(spots) {
+            const container = document.getElementById('destSpotsList');
+            container.innerHTML = '';
+
+            if (!spots || spots.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 py-3 text-center">No attractions found matching your search</p>';
+                return;
+            }
+
+            spots.forEach(function(s, idx) {
+                const item = document.createElement('div');
+                item.className = 'spot-item p-2 rounded-xl bg-gray-50 hover:bg-orange-50/70 border border-gray-100 hover:border-orange-200 transition cursor-pointer flex items-center justify-between gap-2 text-xs';
+                item.id = 'spot-' + s.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                item.onclick = function() {
+                    if (leafletMapInstance && s.coords) {
+                        leafletMapInstance.flyTo(s.coords, 14, { duration: 1.2 });
+                        highlightSpotCard(s.name);
+                    }
+                };
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-sm flex-shrink-0">${s.icon || '📍'}</span>
+                        <div class="truncate">
+                            <p class="font-bold text-gray-800 text-[11px] truncate">${s.name}</p>
+                            <p class="text-[10px] text-gray-400 truncate">${s.type || 'Attraction'}</p>
+                        </div>
+                    </div>
+                    <span class="text-[9px] font-black uppercase text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-md flex-shrink-0">
+                        Pin Map ➔
+                    </span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function highlightSpotCard(spotName) {
+            const cardId = 'spot-' + spotName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+            document.querySelectorAll('.spot-item').forEach(function(c) {
+                c.classList.remove('bg-orange-100', 'border-orange-400');
+            });
+            const target = document.getElementById(cardId);
+            if (target) {
+                target.classList.add('bg-orange-100', 'border-orange-400');
+                target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function filterTouristSpots(query) {
+            const q = (query || '').toLowerCase().trim();
+            let sourceSpots = [];
+
+            if (activeZoneKey === 'all') {
+                Object.keys(SRI_LANKA_REGIONS_DATA).forEach(function(rKey) {
+                    sourceSpots = sourceSpots.concat(SRI_LANKA_REGIONS_DATA[rKey].spots);
+                });
+            } else if (SRI_LANKA_REGIONS_DATA[activeZoneKey]) {
+                sourceSpots = SRI_LANKA_REGIONS_DATA[activeZoneKey].spots;
+            }
+
+            if (!q) {
+                renderSpotsInSidebar(sourceSpots);
+                document.getElementById('spotsCountBadge').textContent = sourceSpots.length + ' Places';
+                return;
+            }
+
+            const filtered = sourceSpots.filter(function(s) {
+                return s.name.toLowerCase().includes(q) || (s.type && s.type.toLowerCase().includes(q));
+            });
+
+            document.getElementById('spotsCountBadge').textContent = filtered.length + ' Places';
+            renderSpotsInSidebar(filtered);
+        }
+
+        function viewRegionTours(regionId) {
+            const region = SRI_LANKA_REGIONS_DATA[regionId];
+            if (!region) return;
+
+            closeMapModal();
+
+            const url = new URL(window.location.origin + '/');
+            if (region.catSlug) {
+                url.searchParams.set('cat', region.catSlug);
+            } else if (region.filterQuery) {
+                url.searchParams.set('q', region.filterQuery);
+            }
+            url.hash = 'packages-section';
+            window.location.href = url.toString();
+        }
+
+        // Close on backdrop click
+        document.getElementById('destinationMapModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMapModal();
+            }
+        });
+
+        // Close on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeMapModal();
+            }
+        });
+    </script>
+
+        // Close on backdrop click
+        document.getElementById('destinationMapModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMapModal();
+            }
+        });
+
+        // Close on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeMapModal();
+            }
+        });
+    </script>
+</body>
+</html>
+

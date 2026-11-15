@@ -1,0 +1,1003 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section (Klook Style) -->
+<section class="relative bg-gray-900 text-white" style="overflow: visible;">
+    <!-- Background Image with Overlay (clipped separately) -->
+    <div class="absolute inset-0 z-0 overflow-hidden rounded-b-none">
+        <img src="https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=1920&q=80" 
+             alt="Sri Lanka Travel" 
+             class="w-full h-full object-cover object-center opacity-40">
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pt-24 sm:pb-32 text-center">
+        <!-- Floating Pill Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-orange-400 text-xs sm:text-sm font-semibold mb-6">
+            <span class="w-2 h-2 rounded-full bg-[#FF5B00] animate-ping"></span>
+            🌟 Sri Lanka's Curated Tours, Stays & Private Journeys
+        </div>
+
+        <!-- Main Headline -->
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-tight">
+            Discover Sri Lanka's Most Memorable <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Tours, Stays & Rides</span>
+        </h1>
+        <p class="mt-4 sm:mt-6 text-base sm:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Browse our curated travel categories, choose your experience, and connect directly with our local travel concierge for instant confirmation.
+        </p>
+
+        <!-- Search Bar with Live Instant Dropdown -->
+        <div id="searchBarWrapper" class="mt-8 sm:mt-10 max-w-3xl mx-auto relative z-50">
+            <div class="bg-white p-2 sm:p-2.5 rounded-2xl sm:rounded-full shadow-2xl flex flex-col sm:flex-row items-center gap-2">
+                <div class="flex items-center gap-3 px-4 py-2 w-full sm:w-auto flex-grow text-gray-700 relative">
+                    <i id="searchIcon" class="fa-solid fa-magnifying-glass text-[#FF5B00] text-lg flex-shrink-0"></i>
+                    <input 
+                        id="liveSearchInput"
+                        type="text"
+                        name="q"
+                        autocomplete="off"
+                        value="{{ search_query|default:'' }}" 
+                        placeholder="Search tours, attractions, or destinations..." 
+                        class="w-full text-sm sm:text-base outline-none bg-transparent placeholder-gray-400 font-medium">
+                    <!-- Clear Button -->
+                    <button id="clearSearchBtn" type="button" class="hidden flex-shrink-0 text-gray-400 hover:text-gray-600 transition">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Custom Category Selector (replaces native <select>) -->
+                <div class="w-full sm:w-auto border-t sm:border-t-0 sm:border-l border-gray-200 px-2 sm:px-3 py-1 relative" id="catDropdownWrapper">
+                    <!-- Hidden real select for form submit compatibility -->
+                    <select id="catSelect" name="cat" class="sr-only" aria-hidden="true" tabindex="-1">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+                                {{ cat.icon_emoji }} {{ cat.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Visible custom trigger button -->
+                    <button type="button" id="catDropdownBtn"
+                            class="flex items-center gap-2.5 w-full sm:w-auto px-3.5 py-2 rounded-xl sm:rounded-full hover:bg-orange-50/70 border border-transparent hover:border-orange-200/80 text-sm font-bold text-gray-700 hover:text-[#FF5B00] transition-all duration-200 outline-none group cursor-pointer"
+                            aria-expanded="false" aria-haspopup="listbox">
+                        <span id="catDropdownIcon" class="text-base leading-none group-hover:scale-110 transition-transform">
+                            {% if active_category %}{{ active_category.icon_emoji }}{% else %}🔥{% endif %}
+                        </span>
+                        <span id="catDropdownLabel" class="truncate max-w-[140px] sm:max-w-[170px] text-left font-bold text-gray-800 group-hover:text-[#FF5B00] transition-colors">
+                            {% if active_category %}{{ active_category.name }}{% else %}All Categories{% endif %}
+                        </span>
+                        <i id="catDropdownChevron" class="fa-solid fa-chevron-down text-[11px] text-gray-400 group-hover:text-[#FF5B00] transition-transform duration-200 ml-0.5"></i>
+                    </button>
+                </div>
+
+                <button id="mainSearchBtn" type="button" class="w-full sm:w-auto px-7 py-3 rounded-xl sm:rounded-full bg-[#FF5B00] hover:bg-[#ea580c] text-white font-bold text-sm sm:text-base transition shadow-md shadow-orange-500/30 flex items-center justify-center gap-2">
+                    <span>Search</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </div>
+            <!-- Dropdown anchor marker — actual dropdown is portal-mounted to <body> -->
+        </div>
+    </div>
+</section>
+
+<!-- Curated Categories Navigation Bar (Klook Slider with Left/Right Arrows & Protected Text) -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
+    <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-xl border border-gray-100">
+        <div class="flex items-center justify-between mb-4 px-1">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-[#FF5B00]"></span>
+                <h2 class="text-xs font-extrabold uppercase tracking-wider text-gray-500 select-none">Explore Curated Experiences by Category</h2>
+            </div>
+            {% if selected_category or search_query %}
+                <a href="{% url 'home' %}" class="text-xs font-bold text-[#FF5B00] hover:underline flex items-center gap-1 select-none">
+                    <i class="fa-solid fa-rotate-left text-[10px]"></i> View All
+                </a>
+            {% else %}
+                <span class="text-[11px] text-gray-400 font-semibold select-none hidden sm:inline">Use arrows or scroll to browse all 9</span>
+            {% endif %}
+        </div>
+
+        <!-- Slider Wrapper with Left/Right Navigation Arrows -->
+        <div class="relative">
+            <!-- Left Scroll Button -->
+            <button id="catScrollLeft" 
+                    type="button" 
+                    aria-label="Previous categories"
+                    class="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 text-gray-700 hover:text-white hover:bg-[#FF5B00] hover:border-[#FF5B00] hover:scale-110 active:scale-90 flex items-center justify-center transition-all duration-200 cursor-pointer">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+
+            <!-- Scrollable Categories Track with Mobile Snap & Smooth Momentum -->
+            <div id="catScrollContainer" 
+                 class="flex items-stretch gap-3.5 overflow-x-auto pb-4 pt-2 px-1.5 no-scrollbar scroll-smooth select-none cursor-grab active:cursor-grabbing snap-x snap-mandatory"
+                 style="-webkit-user-select: none; user-select: none; -webkit-overflow-scrolling: touch;"
+                 onselectstart="return false;">
+
+                <!-- All Packages Tab -->
+                <a href="{% url 'home' %}" 
+                   draggable="false"
+                   class="snap-start flex-shrink-0 flex flex-col items-center justify-between min-w-[150px] sm:min-w-[165px] w-38 sm:w-44 min-h-[150px] p-3.5 rounded-2xl transition-all duration-300 ease-out border select-none group/card active:scale-95 {% if not selected_category %}border-2 border-[#FF5B00] bg-orange-50/80 shadow-lg shadow-orange-500/15 ring-2 ring-orange-200 text-[#FF5B00] -translate-y-1{% else %}border border-gray-200 hover:border-[#FF5B00] hover:-translate-y-1.5 hover:shadow-xl hover:shadow-orange-500/10 hover:bg-orange-50/30 bg-white text-gray-700 shadow-sm{% endif %}">
+                    
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50/80 border border-orange-100 flex items-center justify-center text-2xl group-hover/card:scale-125 group-hover/card:rotate-6 transition-transform duration-300 ease-out flex-shrink-0 shadow-xs">
+                        <span class="select-none" draggable="false">🔥</span>
+                    </div>
+
+                    <div class="my-1.5 flex-grow flex items-center justify-center w-full px-1">
+                        <span class="text-xs sm:text-[13px] font-bold text-center leading-snug text-gray-900 group-hover/card:text-[#FF5B00] transition-colors duration-200 select-none pointer-events-none">
+                            All Experiences
+                        </span>
+                    </div>
+
+                    <div class="h-5 flex items-center justify-center select-none flex-shrink-0">
+                        <span class="text-[10px] font-bold text-orange-700 bg-orange-100/90 group-hover/card:bg-[#FF5B00] group-hover/card:text-white px-2.5 py-0.5 rounded-full select-none pointer-events-none whitespace-nowrap transition-colors duration-200">
+                            View All
+                        </span>
+                    </div>
+                </a>
+
+                <!-- 9 Curated Categories -->
+                {% for cat in categories %}
+                    <a href="?cat={{ cat.slug }}" 
+                       draggable="false"
+                       class="snap-start flex-shrink-0 flex flex-col items-center justify-between min-w-[150px] sm:min-w-[165px] w-38 sm:w-44 min-h-[150px] p-3.5 rounded-2xl transition-all duration-300 ease-out border select-none group/card active:scale-95 {% if selected_category == cat.slug %}border-2 border-[#FF5B00] bg-orange-50/80 shadow-lg shadow-orange-500/15 ring-2 ring-orange-200 text-[#FF5B00] -translate-y-1{% else %}border border-gray-200 hover:border-[#FF5B00] hover:-translate-y-1.5 hover:shadow-xl hover:shadow-orange-500/10 hover:bg-orange-50/30 bg-white text-gray-700 shadow-sm{% endif %}">
+                        
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50/80 border border-orange-100 flex items-center justify-center text-2xl group-hover/card:scale-125 group-hover/card:rotate-6 transition-transform duration-300 ease-out flex-shrink-0 shadow-xs">
+                            <span class="select-none" draggable="false">{{ cat.icon_emoji }}</span>
+                        </div>
+
+                        <div class="my-1.5 flex-grow flex items-center justify-center w-full px-1">
+                            <span class="text-xs sm:text-[13px] font-bold text-center leading-snug text-gray-900 group-hover/card:text-[#FF5B00] transition-colors duration-200 select-none pointer-events-none" title="{{ cat.name }}">
+                                {{ cat.name }}
+                            </span>
+                        </div>
+
+                        <div class="h-5 flex items-center justify-center select-none flex-shrink-0">
+                            {% if cat.badge %}
+                                <span class="text-[10px] font-bold text-orange-700 bg-orange-100/90 group-hover/card:bg-[#FF5B00] group-hover/card:text-white px-2.5 py-0.5 rounded-full select-none pointer-events-none whitespace-nowrap transition-colors duration-200">
+                                    {{ cat.badge }}
+                                </span>
+                            {% else %}
+                                <span class="text-[10px] text-transparent select-none">-</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+
+            <!-- Right Scroll Button -->
+            <button id="catScrollRight" 
+                    type="button" 
+                    aria-label="Next categories"
+                    class="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 text-gray-700 hover:text-white hover:bg-[#FF5B00] hover:border-[#FF5B00] hover:scale-110 active:scale-90 flex items-center justify-center transition-all duration-200 cursor-pointer">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Value Banner -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-[#FF5B00] text-lg font-bold">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+                <h4 class="text-xs sm:text-sm font-bold text-gray-900">Instant WhatsApp</h4>
+                <p class="text-[11px] text-gray-500">Fast 1-click booking</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600 text-lg font-bold">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+                <h4 class="text-xs sm:text-sm font-bold text-gray-900">Direct WhatsApp</h4>
+                <p class="text-[11px] text-gray-500">Fast 1-click inquiry</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 text-lg font-bold">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h4 class="text-xs sm:text-sm font-bold text-gray-900">Verified Vendors</h4>
+                <p class="text-[11px] text-gray-500">Safe guides & drivers</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 text-lg font-bold">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+            <div>
+                <h4 class="text-xs sm:text-sm font-bold text-gray-900">Best Price Promise</h4>
+                <p class="text-[11px] text-gray-500">Wholesale deals</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Package Catalog (Klook Card Grid) -->
+<section id="packages-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                {% if active_category %}
+                    {{ active_category.icon_emoji }} {{ active_category.name }}
+                {% elif search_query %}
+                    Search results for "{{ search_query }}"
+                {% else %}
+                    Featured & Recommended Experiences
+                {% endif %}
+            </h2>
+            <p class="text-sm text-gray-500 mt-1">
+                Showing {{ packages|length }} verified packages with instant WhatsApp booking
+            </p>
+        </div>
+
+        <!-- Fast Sort/Status -->
+        <div class="flex items-center gap-2 text-xs font-semibold text-gray-600">
+            <span class="bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">
+                <i class="fa-solid fa-check text-green-500"></i> No Sign-Up Needed
+            </span>
+        </div>
+    </div>
+
+    {% if packages %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for p in packages %}
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                    <!-- Image & Badges Container -->
+                    <div class="relative h-48 overflow-hidden bg-gray-100">
+                        <img src="{{ p.image_url }}" 
+                             alt="{{ p.title }}" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        
+                        <!-- Floating Category & Badges -->
+                        <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                            {% if p.badge %}
+                                <span class="bg-[#FF5B00] text-white font-bold text-[10px] tracking-wide uppercase px-2.5 py-1 rounded-md shadow-md">
+                                    {{ p.badge }}
+                                </span>
+                            {% else %}
+                                <span class="bg-gray-900/80 backdrop-blur-md text-white font-bold text-[10px] px-2.5 py-1 rounded-md shadow-md">
+                                    {{ p.category.icon_emoji }} {{ p.category.name }}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Top Right Rating Badge -->
+                        <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-2 py-1 rounded-md shadow text-xs font-bold text-gray-800 flex items-center gap-1">
+                            <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                            <span>{{ p.rating }}</span>
+                            <span class="text-gray-400 font-normal text-[10px]">({{ p.reviews_count }})</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-4 sm:p-5 flex flex-col flex-grow justify-between">
+                        <div>
+                            <!-- Location & Duration Tag -->
+                            <div class="flex items-center gap-3 text-xs text-gray-500 mb-2">
+                                <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-gray-400"></i> {{ p.location }}</span>
+                                <span>•</span>
+                                <span class="flex items-center gap-1"><i class="fa-regular fa-clock text-gray-400"></i> {{ p.duration }}</span>
+                            </div>
+
+                            <!-- Title -->
+                            <h3 class="text-base font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-[#FF5B00] transition">
+                                {{ p.title }}
+                            </h3>
+
+                            <!-- Highlights preview -->
+                            <p class="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed">
+                                {{ p.overview }}
+                            </p>
+                        </div>
+
+                        <!-- Price & WhatsApp Action Row -->
+                        <div class="pt-3 border-t border-gray-100 mt-2">
+                            <div class="flex items-baseline justify-between mb-3">
+                                <div>
+                                    {% if p.original_price %}
+                                        <span class="text-xs text-gray-400 line-through">Rs. {{ p.original_price|floatformat:0 }}</span>
+                                    {% endif %}
+                                    <div class="text-lg font-black text-gray-900">
+                                        <span class="text-xs font-semibold text-gray-500">Rs.</span> {{ p.selling_price|floatformat:0 }}
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-green-700 bg-green-50 font-bold px-2 py-0.5 rounded">
+                                    Instant Availability
+                                </span>
+                            </div>
+
+                            <!-- Buttons (Book via WhatsApp + View Details) -->
+                            <div class="grid grid-cols-5 gap-2">
+                                <!-- Details Modal Trigger -->
+                                <button type="button" 
+                                        onclick="openPackageModal({{ p.id }})" 
+                                        class="col-span-2 py-2 px-3 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold transition flex items-center justify-center gap-1">
+                                    <span>Details</span>
+                                    <i class="fa-solid fa-circle-info text-gray-400"></i>
+                                </button>
+
+                                <!-- Booking CTA -->
+                                <a href="{{ p.get_whatsapp_booking_url }}" 
+                                   target="_blank"
+                                   class="col-span-3 py-2 px-3 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white text-xs font-bold transition shadow-md shadow-orange-500/20 flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-calendar-check text-xs"></i>
+                                    <span>Instant Reserve</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-2xl p-12 text-center border border-gray-100 max-w-lg mx-auto my-12">
+            <div class="w-16 h-16 rounded-full bg-orange-50 text-[#FF5B00] flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">No packages found</h3>
+            <p class="text-sm text-gray-500 mb-6">We couldn't find any packages matching your search criteria. Try browsing another category or reset filters.</p>
+            <a href="{% url 'home' %}" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#FF5B00] text-white text-sm font-bold shadow-md hover:bg-orange-600 transition">
+                View All Packages
+            </a>
+        </div>
+    {% endif %}
+</section>
+
+<!-- How It Works (Sinhala + English Explanation for clarity) -->
+<section id="how-it-works" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="bg-gradient-to-br from-gray-900 to-slate-900 text-white rounded-3xl p-8 sm:p-12 relative overflow-hidden">
+        <div class="max-w-2xl">
+            <span class="text-xs font-bold uppercase tracking-widest text-orange-400">Easy 3-Step Process</span>
+            <h2 class="text-2xl sm:text-4xl font-black mt-2 mb-4">How CeylonGo Works for You</h2>
+            <p class="text-gray-300 text-sm leading-relaxed mb-8">
+                පාරිභෝගිකයාට සරලයි, ක්ෂණිකයි! කැමති සේවාව තෝරා WhatsApp පණිවිඩයක් එවන්න. අනෙක් සියල්ල අපි බලාගන්නෙමු.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            <!-- Step 1 -->
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div class="w-12 h-12 rounded-xl bg-[#FF5B00] text-white font-black text-xl flex items-center justify-center mb-4">1</div>
+                <h3 class="text-lg font-bold mb-2">Select Your Package</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Browse curated experiences: Ella signatures, tea trails, waterfalls, safaris, and wellness packages.
+                </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div class="w-12 h-12 rounded-xl bg-green-500 text-white font-black text-xl flex items-center justify-center mb-4">2</div>
+                <h3 class="text-lg font-bold mb-2">Tap "Book via WhatsApp"</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    No credit card or registration needed. Your trip details are auto-typed into WhatsApp directly to our concierge.
+                </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div class="w-12 h-12 rounded-xl bg-amber-500 text-white font-black text-xl flex items-center justify-center mb-4">3</div>
+                <h3 class="text-lg font-bold mb-2">Instant Confirmation</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Our team locks in your booking with the verified host/driver and confirms your schedule within minutes.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Package Detail Modal (Interactive Klook Drawer) -->
+<div id="packageModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
+        <!-- Modal Header with Image -->
+        <div class="relative h-56 bg-gray-900 flex-shrink-0">
+            <img id="modalImage" src="" alt="" class="w-full h-full object-cover">
+            <button onclick="closePackageModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 text-white hover:bg-black/80 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="absolute bottom-4 left-4 flex gap-2">
+                <span id="modalBadge" class="bg-[#FF5B00] text-white text-xs font-bold px-3 py-1 rounded-md shadow-md"></span>
+            </div>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 overflow-y-auto space-y-4 text-sm text-gray-700 flex-grow">
+            <div class="flex items-center gap-3 text-xs text-gray-500">
+                <span id="modalLocation" class="flex items-center gap-1 font-semibold"></span>
+                <span>•</span>
+                <span id="modalDuration" class="flex items-center gap-1"></span>
+                <span>•</span>
+                <span class="flex items-center gap-1 text-amber-500 font-bold"><i class="fa-solid fa-star"></i> <span id="modalRating"></span></span>
+            </div>
+
+            <h3 id="modalTitle" class="text-xl font-black text-gray-900 leading-snug"></h3>
+            <p id="modalOverview" class="text-gray-600 text-sm leading-relaxed"></p>
+
+            <div class="border-t border-gray-100 pt-3">
+                <h4 class="font-bold text-gray-900 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-sparkles text-amber-500"></i> Highlights:</h4>
+                <ul id="modalHighlights" class="space-y-1 text-xs text-gray-600 list-disc list-inside"></ul>
+            </div>
+
+            <div class="border-t border-gray-100 pt-3">
+                <h4 class="font-bold text-gray-900 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-green-500"></i> What's Included:</h4>
+                <ul id="modalInclusions" class="space-y-1 text-xs text-gray-600 list-disc list-inside"></ul>
+            </div>
+        </div>
+
+        <!-- Modal Footer CTA -->
+        <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-4 flex-shrink-0">
+            <div>
+                <span class="text-xs text-gray-400 block font-medium">Total Package Rate</span>
+                <div class="text-xl font-black text-gray-900">
+                    <span class="text-xs font-semibold text-gray-500">Rs.</span> <span id="modalPrice"></span>
+                </div>
+            </div>
+
+            <a id="modalWhatsAppBtn" href="#" target="_blank" class="px-6 py-3 rounded-full bg-[#FF5B00] hover:bg-[#ea580c] text-white font-bold text-sm transition shadow-lg shadow-orange-500/30 flex items-center gap-2">
+                <i class="fa-solid fa-calendar-check text-base"></i>
+                <span>Instant Reserve</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Category Selector Dropdown Menu (Portal) -->
+<div id="catDropdownMenu" 
+     style="display:none; position:fixed; z-index:99999; background:#ffffff; border-radius:24px; box-shadow:0 30px 70px -10px rgba(0,0,0,0.32), 0 0 0 1px rgba(0,0,0,0.06); border:1.5px solid #fed7aa; width:340px; max-width:calc(100vw - 32px); overflow:hidden; font-family:'Plus Jakarta Sans', sans-serif;"
+     aria-live="polite">
+    
+    <!-- Header -->
+    <div style="padding:12px 16px; background:linear-gradient(to right, #fff7ed, #fef3c7); border-bottom:1px solid #fed7aa; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="width:8px; height:8px; border-radius:9999px; background:#FF5B00;"></span>
+            <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:#475569;">Explore by Category</span>
+        </div>
+        <span style="font-size:10px; font-weight:700; color:#ea580c; background:rgba(255,237,213,0.9); padding:2px 8px; border-radius:9999px;">9 Handpicked</span>
+    </div>
+
+    <!-- Category list -->
+    <div style="padding:8px; max-height:360px; overflow-y:auto;" class="no-scrollbar" id="catMenuList">
+        <!-- All Packages option -->
+        <div class="cat-menu-item"
+             data-slug="" data-name="All Categories" data-icon="🔥"
+             style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px; cursor:pointer; transition:all 0.15s; margin-bottom:4px; {% if not selected_category %}background:#fff7ed; border:1px solid #fed7aa;{% else %}border:1px solid transparent;{% endif %}">
+            <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                <div style="width:36px; height:36px; border-radius:10px; background:#ffedd5; border:1px solid #fed7aa; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+                    🔥
+                </div>
+                <div style="min-width:0;">
+                    <p style="font-size:13px; font-weight:700; color:#111827; margin:0; line-height:1.2;">All Experiences</p>
+                    <p style="font-size:11px; color:#6b7280; margin:2px 0 0 0;">View all 18 curated packages</p>
+                </div>
+            </div>
+            <span class="cat-check-icon" style="font-size:12px; color:#FF5B00; font-weight:900; margin-right:4px; {% if not selected_category %}display:inline-block;{% else %}display:none;{% endif %}">
+                <i class="fa-solid fa-check"></i>
+            </span>
+        </div>
+
+        {% for cat in categories %}
+        <div class="cat-menu-item"
+             data-slug="{{ cat.slug }}" data-name="{{ cat.name }}" data-icon="{{ cat.icon_emoji }}"
+             style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px; cursor:pointer; transition:all 0.15s; margin-bottom:4px; {% if selected_category == cat.slug %}background:#fff7ed; border:1px solid #fed7aa;{% else %}border:1px solid transparent;{% endif %}">
+            <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                <div style="width:36px; height:36px; border-radius:10px; background:#fef3c7; border:1px solid #fde68a; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+                    {{ cat.icon_emoji }}
+                </div>
+                <div style="min-width:0;">
+                    <p style="font-size:13px; font-weight:700; color:#111827; margin:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ cat.name }}">
+                        {{ cat.name }}
+                    </p>
+                    {% if cat.badge %}
+                        <span style="display:inline-block; font-size:10px; font-weight:700; color:#c2410c; background:#ffedd5; padding:1px 6px; border-radius:9999px; margin-top:2px;">
+                            {{ cat.badge }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <span class="cat-check-icon" style="font-size:12px; color:#FF5B00; font-weight:900; margin-right:4px; {% if selected_category == cat.slug %}display:inline-block;{% else %}display:none;{% endif %}">
+                <i class="fa-solid fa-check"></i>
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Data Script -->
+<script>
+    const packageDatabase = {
+        {% for p in packages %}
+        "{{ p.id }}": {
+            id: "{{ p.id }}",
+            code: "{{ p.code }}",
+            title: "{{ p.title|escapejs }}",
+            location: "{{ p.location|escapejs }}",
+            duration: "{{ p.duration|escapejs }}",
+            image: "{{ p.image_url|escapejs }}",
+            badge: "{{ p.badge|default:'SPECIAL'|escapejs }}",
+            rating: "{{ p.rating }}",
+            price: "{{ p.selling_price|floatformat:0 }}",
+            overview: "{{ p.overview|escapejs }}",
+            highlights: [{% for h in p.highlights_list %}"{{ h|escapejs }}",{% endfor %}],
+            inclusions: [{% for inc in p.inclusions_list %}"{{ inc|escapejs }}",{% endfor %}],
+            whatsappUrl: "{{ p.get_whatsapp_booking_url|escapejs }}"
+        },
+        {% endfor %}
+    };
+
+    function openPackageModal(packageId) {
+        const data = packageDatabase[packageId];
+        if (!data) return;
+
+        document.getElementById('modalImage').src = data.image;
+        const modalCodeEl = document.getElementById('modalCode');
+        if (modalCodeEl) modalCodeEl.innerText = data.code;
+        document.getElementById('modalBadge').innerText = data.badge;
+        document.getElementById('modalLocation').innerHTML = '<i class="fa-solid fa-location-dot"></i> ' + data.location;
+        document.getElementById('modalDuration').innerHTML = '<i class="fa-regular fa-clock"></i> ' + data.duration;
+        document.getElementById('modalRating').innerText = data.rating;
+        document.getElementById('modalTitle').innerText = data.title;
+        document.getElementById('modalOverview').innerText = data.overview;
+        document.getElementById('modalPrice').innerText = data.price;
+        document.getElementById('modalWhatsAppBtn').href = data.whatsappUrl;
+
+        // Highlights
+        const hlContainer = document.getElementById('modalHighlights');
+        hlContainer.innerHTML = '';
+        data.highlights.forEach(h => {
+            const li = document.createElement('li');
+            li.innerText = h;
+            hlContainer.appendChild(li);
+        });
+
+        // Inclusions
+        const incContainer = document.getElementById('modalInclusions');
+        incContainer.innerHTML = '';
+        data.inclusions.forEach(inc => {
+            const li = document.createElement('li');
+            li.innerText = inc;
+            incContainer.appendChild(li);
+        });
+
+        document.getElementById('packageModal').classList.remove('hidden');
+    }
+
+    function closePackageModal() {
+        document.getElementById('packageModal').classList.add('hidden');
+    }
+
+    // Close on backdrop click
+    document.getElementById('packageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePackageModal();
+        }
+    });
+
+    // Category Slider Navigation Controls
+    document.addEventListener('DOMContentLoaded', function() {
+        const catContainer = document.getElementById('catScrollContainer');
+        const scrollLeftBtn = document.getElementById('catScrollLeft');
+        const scrollRightBtn = document.getElementById('catScrollRight');
+
+        if (catContainer && scrollLeftBtn && scrollRightBtn) {
+            // Scroll by button clicks (Scrolls approx 2 cards per click smoothly)
+            scrollLeftBtn.addEventListener('click', function() {
+                catContainer.scrollBy({ left: -360, behavior: 'smooth' });
+            });
+
+            scrollRightBtn.addEventListener('click', function() {
+                catContainer.scrollBy({ left: 360, behavior: 'smooth' });
+            });
+
+            // Smooth Mouse Drag to Scroll without breaking link clicks
+            let isDown = false;
+            let isDragging = false;
+            let startX;
+            let scrollLeft;
+
+            catContainer.addEventListener('mousedown', (e) => {
+                isDown = true;
+                isDragging = false;
+                catContainer.classList.add('cursor-grabbing');
+                startX = e.pageX - catContainer.offsetLeft;
+                scrollLeft = catContainer.scrollLeft;
+            });
+
+            catContainer.addEventListener('mouseleave', () => {
+                isDown = false;
+                catContainer.classList.remove('cursor-grabbing');
+            });
+
+            catContainer.addEventListener('mouseup', () => {
+                isDown = false;
+                catContainer.classList.remove('cursor-grabbing');
+                setTimeout(() => { isDragging = false; }, 50);
+            });
+
+            catContainer.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                const x = e.pageX - catContainer.offsetLeft;
+                const walk = (x - startX) * 1.4;
+                if (Math.abs(x - startX) > 6) {
+                    isDragging = true;
+                }
+                catContainer.scrollLeft = scrollLeft - walk;
+            });
+
+            // Prevent unwanted navigation only when dragging
+            catContainer.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (isDragging) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        }
+    });
+
+    /* ================================================================
+       LIVE SEARCH — Portal Dropdown (position:fixed, escapes all parents)
+       Runs after full DOM ready to ensure portal elements exist
+    ================================================================ */
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const input        = document.getElementById('liveSearchInput');
+        const dropdown     = document.getElementById('searchDropdown');
+        const resultsList  = document.getElementById('searchResultsList');
+        const loadingEl    = document.getElementById('searchLoading');
+        const noResultsEl  = document.getElementById('searchNoResults');
+        const noResultsTxt = document.getElementById('noResultsText');
+        const clearBtn     = document.getElementById('clearSearchBtn');
+        const mainSearchBtn= document.getElementById('mainSearchBtn');
+        const catSelect    = document.getElementById('catSelect');
+        const wrapper      = document.getElementById('searchBarWrapper');
+        const backdrop     = document.getElementById('searchBackdrop');
+
+        if (!input || !dropdown || !wrapper) {
+            console.warn('CeylonGo Search: Missing elements', {input, dropdown, wrapper});
+            return;
+        }
+
+        let debounceTimer = null;
+        let currentQuery = '';
+
+        // ---- Position the dropdown under the search bar (fixed to viewport) ----
+        function positionDropdown() {
+            const rect = wrapper.getBoundingClientRect();
+            dropdown.style.top   = (rect.bottom + 8) + 'px';
+            dropdown.style.left  = rect.left + 'px';
+            dropdown.style.width = rect.width + 'px';
+        }
+
+        function showDropdown() {
+            positionDropdown();
+            dropdown.style.display = 'block';
+            if (backdrop) {
+                // Start backdrop exactly at bottom of search bar, cover rest of page
+                const rect = wrapper.getBoundingClientRect();
+                backdrop.style.top     = rect.bottom + 'px';
+                backdrop.style.display = 'block';
+            }
+        }
+        function hideDropdown() {
+            dropdown.style.display = 'none';
+            if (backdrop && (!catMenu || catMenu.style.display === 'none')) {
+                backdrop.style.display = 'none';
+            }
+        }
+
+        // Reposition on scroll/resize so it always tracks the bar
+        window.addEventListener('scroll', function() {
+            if (dropdown.style.display !== 'none') {
+                positionDropdown();
+                if (backdrop) {
+                    const rect = wrapper.getBoundingClientRect();
+                    backdrop.style.top = rect.bottom + 'px';
+                }
+            }
+        }, { passive: true });
+        window.addEventListener('resize', function() {
+            if (dropdown.style.display !== 'none') {
+                positionDropdown();
+                if (backdrop) {
+                    const rect = wrapper.getBoundingClientRect();
+                    backdrop.style.top = rect.bottom + 'px';
+                }
+            }
+        });
+
+        // ---- Utility Helpers ----
+        function formatPrice(p) {
+            return 'Rs. ' + parseFloat(p).toLocaleString('en-LK', {maximumFractionDigits: 0});
+        }
+
+        function setState(state) {
+            loadingEl.style.display   = 'none';
+            noResultsEl.style.display = 'none';
+            resultsList.innerHTML     = '';
+            if (state === 'loading') loadingEl.style.display   = 'flex';
+            if (state === 'empty')   noResultsEl.style.display = 'block';
+        }
+
+        // ---- Render one result row ----
+        function buildResultItem(p) {
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer; border-bottom:1px solid #f8fafc; transition:background 0.15s;';
+            div.onmouseenter = function(){ this.style.background='#fff7ed'; };
+            div.onmouseleave = function(){ this.style.background=''; };
+            div.innerHTML = `
+                <div style="width:56px;height:48px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f3f4f6;">
+                    <img src="${p.image_url}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div style="flex-grow:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                        <span style="font-size:10px;font-weight:600;color:#6b7280;">${p.category_icon} ${p.category_name}</span>
+                        ${p.badge ? `<span style="font-size:9px;font-weight:700;color:#fff;background:#FF5B00;padding:1px 5px;border-radius:4px;">${p.badge}</span>` : ''}
+                    </div>
+                    <p style="font-size:14px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 0 2px;">${p.title}</p>
+                    <p style="font-size:11px;color:#6b7280;margin:0;">📍 ${p.location} · ⏱ ${p.duration}</p>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+                    <span style="font-size:14px;font-weight:900;color:#111827;">${formatPrice(p.selling_price)}</span>
+                    <a href="${p.whatsapp_url}" target="_blank"
+                       onclick="event.stopPropagation()"
+                       style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:#FF5B00;color:#fff;padding:4px 10px;border-radius:8px;text-decoration:none;white-space:nowrap;">
+                        Reserve
+                    </a>
+                </div>`;
+
+            div.addEventListener('click', function(e) {
+                if (e.target.closest('a')) return;
+                hideDropdown();
+                if (typeof openPackageModal === 'function') openPackageModal(p.id);
+            });
+            return div;
+        }
+
+        // ---- Fetch results from API ----
+        async function fetchResults(q) {
+            if (!q) { hideDropdown(); return; }
+            currentQuery = q;
+            showDropdown();
+            setState('loading');
+
+            try {
+                const res  = await fetch('/api/search/?q=' + encodeURIComponent(q));
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+
+                if (data.query !== currentQuery) return;
+
+                if (data.count === 0) {
+                    setState('empty');
+                    noResultsTxt.textContent = 'No results for "' + q + '"';
+                } else {
+                    setState('');
+                    data.results.forEach(function(p) {
+                        resultsList.appendChild(buildResultItem(p));
+                    });
+
+                    const footer = document.createElement('div');
+                    footer.style.cssText = 'padding:10px 16px;background:#f9fafb;font-size:12px;color:#9ca3af;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;';
+                    footer.innerHTML = '<span>Showing <strong>' + data.count + '</strong> match' + (data.count !== 1 ? 'es' : '') + '</span>' +
+                        '<button style="font-weight:700;color:#FF5B00;background:none;border:none;cursor:pointer;" onclick="submitMainSearch()">View all results ›</button>';
+                    resultsList.appendChild(footer);
+                }
+            } catch(err) {
+                console.error('Search error:', err);
+                setState('empty');
+                noResultsTxt.textContent = 'Search unavailable — try again';
+            }
+        }
+
+        // ---- Submit full page search ----
+        window.submitMainSearch = function() {
+            const q   = input.value.trim();
+            const cat = catSelect ? catSelect.value : '';
+            const url = new URL(window.location.origin + '/');
+            if (q)   url.searchParams.set('q', q);
+            if (cat) url.searchParams.set('cat', cat);
+            url.hash = 'packages-section';
+            hideDropdown();
+            window.location.href = url.toString();
+        };
+
+        // ---- Input events ----
+        input.addEventListener('input', function() {
+            const val = this.value.trim();
+            clearBtn.classList.toggle('hidden', !val);
+            clearTimeout(debounceTimer);
+            if (!val) { hideDropdown(); return; }
+            debounceTimer = setTimeout(function(){ fetchResults(val); }, 220);
+        });
+
+        input.addEventListener('focus', function() {
+            hideCatMenu();
+            if (this.value.trim()) fetchResults(this.value.trim());
+        });
+
+        clearBtn.addEventListener('click', function() {
+            input.value = '';
+            clearBtn.classList.add('hidden');
+            hideDropdown();
+            input.focus();
+        });
+
+        mainSearchBtn.addEventListener('click', submitMainSearch);
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); submitMainSearch(); }
+            if (e.key === 'Escape') { hideDropdown(); hideCatMenu(); }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') { hideDropdown(); hideCatMenu(); }
+        });
+
+        // ---- Custom Category Selector Logic ----
+        const catMenu    = document.getElementById('catDropdownMenu');
+        const catBtn     = document.getElementById('catDropdownBtn');
+        const catIcon    = document.getElementById('catDropdownIcon');
+        const catLabel   = document.getElementById('catDropdownLabel');
+        const catChevron = document.getElementById('catDropdownChevron');
+
+        if (catMenu && catMenu.parentElement !== document.body) {
+            document.body.appendChild(catMenu);
+        }
+
+        function positionCatDropdown() {
+            if (!catBtn || !catMenu) return;
+            const btnRect = catBtn.getBoundingClientRect();
+            catMenu.style.top = (btnRect.bottom + 8) + 'px';
+            const menuWidth = 340;
+            let leftPos = btnRect.left;
+            if (leftPos + menuWidth > window.innerWidth - 16) {
+                leftPos = window.innerWidth - menuWidth - 16;
+            }
+            if (leftPos < 16) leftPos = 16;
+            catMenu.style.left = leftPos + 'px';
+            catMenu.style.width = Math.min(menuWidth, window.innerWidth - 32) + 'px';
+        }
+
+        function showCatMenu() {
+            hideDropdown();
+            positionCatDropdown();
+            catMenu.style.display = 'block';
+            if (catChevron) catChevron.style.transform = 'rotate(180deg)';
+            if (catBtn) {
+                catBtn.style.backgroundColor = '#fff7ed';
+                catBtn.style.borderColor = '#fed7aa';
+            }
+            if (backdrop) {
+                const rect = wrapper.getBoundingClientRect();
+                backdrop.style.top = rect.bottom + 'px';
+                backdrop.style.display = 'block';
+            }
+        }
+
+        function hideCatMenu() {
+            if (catMenu) catMenu.style.display = 'none';
+            if (catChevron) catChevron.style.transform = '';
+            if (catBtn) {
+                catBtn.style.backgroundColor = '';
+                catBtn.style.borderColor = 'transparent';
+            }
+            if (backdrop && (!dropdown || dropdown.style.display === 'none')) {
+                backdrop.style.display = 'none';
+            }
+        }
+
+        if (catBtn) {
+            catBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (catMenu && catMenu.style.display === 'block') {
+                    hideCatMenu();
+                } else {
+                    showCatMenu();
+                }
+            });
+        }
+
+        // Reposition on scroll/resize
+        window.addEventListener('scroll', function() {
+            if (catMenu && catMenu.style.display === 'block') {
+                positionCatDropdown();
+                if (backdrop) {
+                    const rect = wrapper.getBoundingClientRect();
+                    backdrop.style.top = rect.bottom + 'px';
+                }
+            }
+        }, { passive: true });
+        window.addEventListener('resize', function() {
+            if (catMenu && catMenu.style.display === 'block') {
+                positionCatDropdown();
+                if (backdrop) {
+                    const rect = wrapper.getBoundingClientRect();
+                    backdrop.style.top = rect.bottom + 'px';
+                }
+            }
+        });
+
+        // Category Item Click
+        document.querySelectorAll('.cat-menu-item').forEach(function(item) {
+            item.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('cat-active')) {
+                    this.style.background = '#fff7ed';
+                }
+            });
+            item.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('cat-active')) {
+                    this.style.background = 'transparent';
+                }
+            });
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const slug = this.getAttribute('data-slug') || '';
+                const name = this.getAttribute('data-name') || 'All Categories';
+                const icon = this.getAttribute('data-icon') || '🔥';
+
+                if (catSelect) catSelect.value = slug;
+                if (catIcon) catIcon.textContent = icon;
+                if (catLabel) catLabel.textContent = name;
+
+                document.querySelectorAll('.cat-menu-item').forEach(function(el) {
+                    el.classList.remove('cat-active');
+                    el.style.background = 'transparent';
+                    el.style.border = '1px solid transparent';
+                    const check = el.querySelector('.cat-check-icon');
+                    if (check) check.style.display = 'none';
+                });
+
+                this.classList.add('cat-active');
+                this.style.background = '#fff7ed';
+                this.style.border = '1px solid #fed7aa';
+                const myCheck = this.querySelector('.cat-check-icon');
+                if (myCheck) myCheck.style.display = 'inline-block';
+
+                hideCatMenu();
+            });
+        });
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', function(e) {
+            if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+                hideDropdown();
+            }
+            if (catMenu && catBtn && !catBtn.contains(e.target) && !catMenu.contains(e.target)) {
+                hideCatMenu();
+            }
+        });
+
+        // Click backdrop to close
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                hideDropdown();
+                hideCatMenu();
+                input.blur();
+            });
+        }
+
+        // ---- Auto-scroll to packages section if search/filter active ----
+        const urlParams  = new URLSearchParams(window.location.search);
+        const hasSearch  = urlParams.has('q') || urlParams.has('cat');
+        const hashTarget = window.location.hash === '#packages-section';
+        if (hasSearch || hashTarget) {
+            const pkgSection = document.getElementById('packages-section');
+            if (pkgSection) {
+                setTimeout(function() {
+                    pkgSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 200);
+            }
+        }
+
+    }); // end DOMContentLoaded
+</script>
+{% endblock %}
+
