@@ -502,8 +502,8 @@
                     </div>
                 </div>
 
-                <!-- Destination Detail Sidebar -->
-                <div id="destSidebar" class="w-full md:w-80 lg:w-[380px] bg-white border-t md:border-t-0 md:border-l border-gray-100 flex flex-col justify-between overflow-hidden flex-shrink-0">
+                <!-- Destination Detail Sidebar (Hidden by default; only opens when a destination or pin is clicked) -->
+                <div id="destSidebar" class="w-full md:w-80 lg:w-[380px] bg-white border-t md:border-t-0 md:border-l border-gray-100 flex flex-col justify-between overflow-hidden flex-shrink-0" style="display: none;">
                     <!-- Top Zone Info Header -->
                     <div class="p-4 border-b border-gray-100 flex-shrink-0">
                         <div class="h-32 sm:h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2.5 relative shadow-sm">
@@ -511,6 +511,9 @@
                             <span id="destBadge" class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#FF5B00] text-white shadow">
                                 ⭐ VERIFIED DIRECT HUB
                             </span>
+                            <button type="button" onclick="focusDestination('all')" title="Close details and expand full map" class="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer z-10 shadow">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
                         </div>
                         <h4 id="destTitle" class="text-base sm:text-lg font-black text-gray-900 leading-snug">🏔️ Ella & Nuwara Eliya Zone</h4>
                         <p id="destDesc" class="text-xs text-gray-500 mt-1 leading-relaxed">
@@ -1133,6 +1136,17 @@
         }
 
         function showAllSriLankaOverview() {
+            // Hide sidebar when in All Island overview mode so map gets 100% full width
+            const sidebar = document.getElementById('destSidebar');
+            if (sidebar) sidebar.style.display = 'none';
+
+            if (leafletMapInstance) {
+                setTimeout(function() {
+                    leafletMapInstance.invalidateSize(true);
+                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
+                }, 60);
+            }
+
             document.getElementById('destImg').src = 'https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=800&q=80';
             const badgeEl = document.getElementById('destBadge');
             badgeEl.textContent = '🗺️ COMPLETE ISLAND GUIDE';
@@ -1166,6 +1180,17 @@
         }
 
         function updateDestSidebar(region) {
+            // Reveal sidebar when a destination or pin is clicked
+            const sidebar = document.getElementById('destSidebar');
+            if (sidebar) {
+                sidebar.style.display = 'flex';
+                if (leafletMapInstance) {
+                    setTimeout(function() {
+                        leafletMapInstance.invalidateSize(true);
+                    }, 60);
+                }
+            }
+
             document.getElementById('destImg').src = region.img;
 
             const badgeEl = document.getElementById('destBadge');
