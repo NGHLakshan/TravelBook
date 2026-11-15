@@ -832,7 +832,8 @@
             }
         };
 
-        const SRI_LANKA_BOUNDS = [[5.85, 79.6], [9.88, 81.9]];
+        const SRI_LANKA_BOUNDS = [[5.85, 79.55], [9.90, 81.95]];
+        const SRI_LANKA_STRICT_BOUNDS = [[5.65, 79.30], [10.05, 82.20]];
         let leafletMapInstance = null;
         let currentTileLayer = null;
         let activeThemeKey = 'osm';
@@ -890,7 +891,7 @@
                     initSriLankaMap();
                 } else {
                     leafletMapInstance.invalidateSize(true);
-                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [30, 30] });
+                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
                     updateZoomLevelClass();
                 }
             }, 100);
@@ -955,18 +956,20 @@
             // Start in compact mode (no text boxes, zero clutter)
             mapContainer.classList.add('zoom-compact');
 
-            // Centered on Sri Lanka island with clean integer zoom 8
+            // Centered strictly on Sri Lanka island with rigid boundaries (Strict Island Lock)
             leafletMapInstance = L.map('sriLankaMap', {
-                center: [8.0, 80.75],
+                center: [7.87, 80.70],
                 zoom: 8,
-                minZoom: 7,
+                minZoom: 7.7,
                 maxZoom: 18,
+                zoomSnap: 0.1,
+                zoomDelta: 0.5,
                 zoomControl: false,
                 fadeAnimation: true,
                 zoomAnimation: true,
                 inertia: true,
-                maxBounds: [[4.0, 76.0], [12.5, 85.5]],
-                maxBoundsViscosity: 0.7
+                maxBounds: SRI_LANKA_STRICT_BOUNDS,
+                maxBoundsViscosity: 1.0 // 100% rigid wall — cannot be dragged into India or away from Sri Lanka
             });
 
             // Automatically toggle compact vs detailed pins on zoom & move changes
@@ -979,7 +982,7 @@
             renderGameLandmarks();
 
             // Fit tightly to Sri Lanka island shape
-            leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [30, 30] });
+            leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
 
             // Start in All-Island clean view
             showAllSriLankaOverview();
@@ -988,7 +991,7 @@
             setTimeout(function() {
                 if (leafletMapInstance) {
                     leafletMapInstance.invalidateSize(true);
-                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [30, 30] });
+                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
                     updateZoomLevelClass();
                 }
             }, 250);
@@ -1094,7 +1097,7 @@
 
             if (key === 'all') {
                 if (leafletMapInstance) {
-                    leafletMapInstance.flyTo([7.87, 80.75], 8, { duration: 1.2, easeLinearity: 0.25 });
+                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
                 }
                 clearSpotMarkers();
                 activeZoneKey = 'all';
