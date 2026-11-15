@@ -93,3 +93,26 @@ def search_api_view(request):
             })
 
     return JsonResponse({'results': results, 'query': q, 'count': len(results)})
+
+
+import subprocess
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def github_webhook_view(request):
+    """
+    Auto-updates PythonAnywhere server when GitHub receives a push!
+    """
+    if request.method == 'POST':
+        repo_dir = '/home/NGHL/TravelBook'
+        wsgi_file = '/var/www/nghl_pythonanywhere_com_wsgi.py'
+        try:
+            # 1. Pull latest code from GitHub
+            subprocess.run(['git', '-C', repo_dir, 'pull'], check=True, capture_output=True)
+            # 2. Touch WSGI file to trigger instant PythonAnywhere auto-reload
+            subprocess.run(['touch', wsgi_file], check=True)
+            return HttpResponse('PythonAnywhere updated and reloaded successfully!', status=200)
+        except Exception as e:
+            return HttpResponse(f'Update error: {e}', status=500)
+    return HttpResponse('GitHub Webhook endpoint active. Ready for push notifications.')
