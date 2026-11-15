@@ -11,11 +11,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-gzw%f@njq60uv2e70#uv^00r2sa&a$dd0j)@74@1c^m-qpag7b')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://*.pythonanywhere.com',
     'https://*.railway.app',
     'https://*.up.railway.app',
     'http://localhost:8000',
