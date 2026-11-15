@@ -445,8 +445,11 @@
                     <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 whitespace-nowrap select-none ml-2">
                         EXPLORE ZONES:
                     </span>
+                    <button type="button" data-zone="northern_jaffna" onclick="focusDestination('northern_jaffna')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap transition cursor-pointer">
+                        🏰 Jaffna & North (8)
+                    </button>
                     <button type="button" data-zone="cultural_triangle" onclick="focusDestination('cultural_triangle')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap transition cursor-pointer">
-                        🏛️ Cultural Triangle (11)
+                        🏛️ Cultural Triangle (13)
                     </button>
                     <button type="button" data-zone="kandy_hills" onclick="focusDestination('kandy_hills')" class="zone-pill px-3 py-1 rounded-full text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap transition cursor-pointer">
                         👑 Kandy & Hills (15)
@@ -560,8 +563,33 @@
 
     <!-- Map Logic Script -->
     <script>
-        // ALL 77 TOURIST PLACES CATEGORIZED INTO 7 REGIONS
+        // ALL TOURIST PLACES CATEGORIZED INTO 8 ADVENTURE ZONES
         const SRI_LANKA_REGIONS_DATA = {
+            northern_jaffna: {
+                id: "northern_jaffna",
+                title: "🏰 Jaffna & Northern Peninsula",
+                badge: "🏰 HERITAGE OF THE NORTH",
+                badgeColor: "bg-purple-700",
+                isCoreHub: false,
+                coords: [9.6615, 80.0150],
+                zoom: 10,
+                img: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+                desc: "Explore historic Jaffna Dutch Fort, golden Nallur Kandaswamy Kovil, shallow turquoise waters of Casuarina Beach, wild ponies of Delft Island, and the sacred sea shrine of Nagadeepa.",
+                filterQuery: "jaffna",
+                catSlug: "heritage-culture",
+                btnText: "Explore Northern Tours ➔",
+                waQuery: "Jaffna & Northern Peninsula Tours (Nallur, Delft, Mannar)",
+                spots: [
+                    { name: "Jaffna Dutch Fort", type: "17th-Century Colonial Ramparts", coords: [9.6615, 80.0150], icon: "🏰" },
+                    { name: "Nallur Kandaswamy Kovil", type: "Sacred Golden Hindu Temple", coords: [9.6744, 80.0294], icon: "🛕" },
+                    { name: "Casuarina Beach", type: "Pure White Sand Bay", coords: [9.7717, 79.8883], icon: "🏖️" },
+                    { name: "Delft Island (Neduntheevu)", type: "Wild Ponies & Baobab Tree", coords: [9.5167, 79.6833], icon: "🐎" },
+                    { name: "Nagadeepa Purana Viharaya", type: "Historic Island Buddhist Shrine", coords: [9.6133, 79.7744], icon: "☸️" },
+                    { name: "Point Pedro Lighthouse", type: "Northernmost Tip of Sri Lanka", coords: [9.8286, 80.2464], icon: "🗼" },
+                    { name: "Mannar Island & Rama Setu", type: "Adam's Bridge Shoals & Baobab", coords: [8.9806, 79.9042], icon: "🌴" },
+                    { name: "Thiruketheeswaram Kovil", type: "Ancient Sacred Pancha Ishwaram", coords: [8.9500, 79.9100], icon: "🙏" }
+                ]
+            },
             cultural_triangle: {
                 id: "cultural_triangle",
                 title: "🏛️ Cultural Triangle & North Central",
@@ -575,7 +603,7 @@
                 filterQuery: "sigiriya",
                 catSlug: "heritage-culture",
                 btnText: "Explore Heritage & Culture Tours ➔",
-                waQuery: "Cultural Triangle (Sigiriya, Dambulla, Polonnaruwa)",
+                waQuery: "Cultural Triangle (Sigiriya, Dambulla, Polonnaruwa, Anuradhapura)",
                 spots: [
                     { name: "Sigiriya Rock Fortress", type: "World Wonder", coords: [7.9570, 80.7603], icon: "🦁" },
                     { name: "Sigiriya Museum", type: "Museum & Archaeology", coords: [7.9540, 80.7550], icon: "🏛️" },
@@ -584,6 +612,8 @@
                     { name: "Polonnaruwa Sacred City", type: "Ancient Capital", coords: [7.9403, 81.0188], icon: "🏛️" },
                     { name: "Gal Viharaya", type: "Carved Granite Buddhas", coords: [7.9647, 81.0042], icon: "🪨" },
                     { name: "Ruwanwelisaya", type: "Great Stupa", coords: [8.3500, 80.3964], icon: "☸️" },
+                    { name: "Jaya Sri Maha Bodhi", type: "Sacred Sacred Tree", coords: [8.3447, 80.3967], icon: "🌿" },
+                    { name: "Mihintale Sacred Peak", type: "Cradle of Buddhism", coords: [8.3514, 80.5097], icon: "⛰️" },
                     { name: "Mahamevnawa Monastery", type: "Buddhist Meditation", coords: [8.3610, 80.4020], icon: "🙏" },
                     { name: "Yapahuwa Rock Fortress", type: "Medieval Citadel", coords: [7.8105, 80.3120], icon: "🏰" },
                     { name: "Minneriya National Park", type: "Elephant Gathering", coords: [8.0333, 80.9000], icon: "🐘" },
@@ -762,6 +792,10 @@
 
         // ILLUSTRATED 3D GAME-STYLE LANDMARKS (Directly on Map Canvas)
         const GAME_LANDMARKS = [
+            { name: "🏰 Jaffna Kingdom & Fort", short: "Jaffna", coords: [9.6615, 80.0150], zone: "northern_jaffna", color: "orb-purple", core: false },
+            { name: "🏝️ Delft Island & Nagadeepa", short: "Delft Island", coords: [9.5167, 79.6833], zone: "northern_jaffna", color: "orb-teal", core: false },
+            { name: "🌴 Mannar & Adam's Bridge", short: "Mannar", coords: [8.9806, 79.9042], zone: "northern_jaffna", color: "orb-cyan", core: false },
+            { name: "☸️ Anuradhapura Sacred City", short: "Anuradhapura", coords: [8.3500, 80.3964], zone: "cultural_triangle", color: "orb-amber", core: false },
             { name: "🦁 Sigiriya Lion Rock", short: "Sigiriya", coords: [7.9570, 80.7603], zone: "cultural_triangle", color: "orb-purple", core: false },
             { name: "🚂 Ella Nine Arch", short: "Ella", coords: [6.8768, 81.0608], zone: "ella_nuwara_eliya", color: "orb-orange", core: true },
             { name: "🌿 Nuwara Eliya Tea Hills", short: "Nuwara Eliya", coords: [6.9536, 80.7786], zone: "ella_nuwara_eliya", color: "orb-emerald", core: true },
@@ -1101,16 +1135,16 @@
             badgeEl.textContent = '🗺️ COMPLETE ISLAND GUIDE';
             badgeEl.className = 'absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow bg-gray-900';
 
-            document.getElementById('destTitle').textContent = 'Sri Lanka 7 Adventure Zones (77 Attractions)';
-            document.getElementById('destDesc').textContent = 'Explore our verified local network across Ella, Nuwara Eliya, Yala Safari, Colombo VIP Cabs, and every scenic corner of Sri Lanka.';
-
-            const spotsListEl = document.getElementById('destSpotsList');
-            spotsListEl.innerHTML = '';
-
             let allSpots = [];
             Object.keys(SRI_LANKA_REGIONS_DATA).forEach(function(rKey) {
                 allSpots = allSpots.concat(SRI_LANKA_REGIONS_DATA[rKey].spots);
             });
+
+            document.getElementById('destTitle').textContent = 'Sri Lanka 8 Adventure Zones (' + allSpots.length + ' Attractions)';
+            document.getElementById('destDesc').textContent = 'Explore our verified local network across Jaffna, Ella, Nuwara Eliya, Yala Safari, Colombo VIP Cabs, and every scenic corner of Sri Lanka.';
+
+            const spotsListEl = document.getElementById('destSpotsList');
+            spotsListEl.innerHTML = '';
 
             document.getElementById('spotsCountLabel').textContent = 'Total Sights in Sri Lanka:';
             document.getElementById('spotsCountBadge').textContent = allSpots.length + ' Places';
