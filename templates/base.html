@@ -463,10 +463,10 @@
                 </div>
             </div>
 
-            <!-- Modal Body (Split: Map on left, Destination & 77 Spots Info Card on right) -->
+            <!-- Modal Body (Split: Map on left, Destination & Spots Info Card on right) -->
             <div class="flex-grow flex flex-col md:flex-row min-h-0 relative">
-                <!-- Interactive Map Canvas -->
-                <div class="flex-grow h-[380px] md:h-[540px] relative">
+                <!-- Interactive Map Canvas (Full vertical height for complete Sri Lanka teardrop shape) -->
+                <div class="flex-grow h-[460px] md:h-[600px] relative">
                     <div id="sriLankaMap" class="w-full h-full"></div>
 
                     <!-- Floating Map Theme Switcher (Ultra Colorful 3D Views) -->
@@ -835,14 +835,32 @@
             }
         };
 
-        const SRI_LANKA_BOUNDS = [[5.85, 79.55], [9.90, 81.95]];
-        const SRI_LANKA_STRICT_BOUNDS = [[5.65, 79.30], [10.05, 82.20]];
+        // STRICT SRI LANKA BOUNDS — Covers entire island from Point Pedro (North) to Dondra (South)
+        const SRI_LANKA_BOUNDS = [[5.70, 79.40], [10.05, 82.10]];
+        const SRI_LANKA_STRICT_BOUNDS = [[5.20, 78.80], [10.40, 82.60]];
         let leafletMapInstance = null;
         let currentTileLayer = null;
         let activeThemeKey = 'osm';
         let landmarkMarkers = [];
         let spotMarkers = [];
         let activeZoneKey = 'all';
+        let isZoomingToTarget = false;
+
+        function updateZoomPillsUI(zoneKey) {
+            document.querySelectorAll('.zone-pill').forEach(function(pill) {
+                if (pill.getAttribute('data-zone') === zoneKey) {
+                    pill.classList.remove('bg-white', 'text-gray-800', 'border-gray-200');
+                    if (zoneKey === 'all') {
+                        pill.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-sm');
+                    } else {
+                        pill.classList.add('bg-[#FF5B00]', 'text-white', 'border-[#FF5B00]', 'shadow-sm');
+                    }
+                } else {
+                    pill.classList.remove('bg-gray-900', 'bg-[#FF5B00]', 'text-white', 'shadow-sm', 'border-[#FF5B00]', 'border-gray-900');
+                    pill.classList.add('bg-white', 'text-gray-800', 'border-gray-200');
+                }
+            });
+        }
 
         function updateZoomLevelClass() {
             if (!leafletMapInstance) return;
@@ -850,32 +868,26 @@
             const mapEl = document.getElementById('sriLankaMap');
             if (!mapEl) return;
 
-            // Zoom <= 9.5 → compact island overview: only glowing icon dots, ZERO text labels
-            // Zoom >  9.5 → detailed zone view: short name pill appears below each icon
-            if (currentZoom <= 9.5) {
+            // Zoom <= 9.2 → compact island overview: only glowing icon dots, ZERO text labels
+            // Zoom >  9.2 → detailed zone view: short name pill appears below each icon
+            if (currentZoom <= 9.2) {
                 mapEl.classList.add('zoom-compact');
                 mapEl.classList.remove('zoom-detailed');
 
-                // Auto-clear zone spots & circle when user zooms back out to island overview
-                clearSpotMarkers();
-                if (activeZoneCircle && leafletMapInstance) {
-                    leafletMapInstance.removeLayer(activeZoneCircle);
-                    activeZoneCircle = null;
-                }
-                // Reset active zone key & sidebar to island overview
-                if (activeZoneKey !== 'all') {
+                // Auto-clear zone spots ONLY when user manually zooms all the way out (zoom <= 7.6)
+                if (!isZoomingToTarget && activeZoneKey !== 'all' && currentZoom <= 7.6) {
+                    clearSpotMarkers();
+                    if (activeZoneCircle && leafletMapInstance) {
+                        leafletMapInstance.removeLayer(activeZoneCircle);
+                        activeZoneCircle = null;
+                    }
                     activeZoneKey = 'all';
-                    // Reset zone pill highlights
-                    document.querySelectorAll('.zone-pill').forEach(function(pill) {
-                        if (pill.getAttribute('data-zone') === 'all') {
-                            pill.classList.remove('bg-white', 'text-gray-800', 'border-gray-200', 'bg-[#FF5B00]', 'border-[#FF5B00]');
-                            pill.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-sm');
-                        } else {
-                            pill.classList.remove('bg-gray-900', 'bg-[#FF5B00]', 'text-white', 'shadow-sm', 'border-[#FF5B00]', 'border-gray-900');
-                            pill.classList.add('bg-white', 'text-gray-800', 'border-gray-200');
-                        }
-                    });
-                    showAllSriLankaOverview();
+                    updateZoomPillsUI('all');
+                    const sidebar = document.getElementById('destSidebar');
+                    if (sidebar) sidebar.style.display = 'none';
+                    setTimeout(function() {
+                        if (leafletMapInstance) leafletMapInstance.invalidateSize(true);
+                    }, 50);
                 }
             } else {
                 mapEl.classList.add('zoom-detailed');
@@ -959,11 +971,11 @@
             // Start in compact mode (no text boxes, zero clutter)
             mapContainer.classList.add('zoom-compact');
 
-            // Centered strictly on Sri Lanka island with rigid boundaries (Strict Island Lock)
+            // Centered strictly on Sri Lanka island with full teardrop island visibility
             leafletMapInstance = L.map('sriLankaMap', {
                 center: [7.87, 80.70],
-                zoom: 8,
-                minZoom: 7.7,
+                zoom: 7.3,
+                minZoom: 6.7,
                 maxZoom: 18,
                 zoomSnap: 0.1,
                 zoomDelta: 0.5,
@@ -972,7 +984,7 @@
                 zoomAnimation: true,
                 inertia: true,
                 maxBounds: SRI_LANKA_STRICT_BOUNDS,
-                maxBoundsViscosity: 1.0 // 100% rigid wall — cannot be dragged into India or away from Sri Lanka
+                maxBoundsViscosity: 0.9
             });
 
             // Automatically toggle compact vs detailed pins on zoom & move changes
@@ -1031,10 +1043,47 @@
                     if (e && e.originalEvent) {
                         L.DomEvent.stopPropagation(e);
                     }
-                    focusDestination(lm.zone);
+                    zoomToLandmark(lm);
                 });
                 landmarkMarkers.push(marker);
             });
+        }
+
+        function zoomToLandmark(lm) {
+            if (!leafletMapInstance) return;
+            isZoomingToTarget = true;
+            activeZoneKey = lm.zone;
+            updateZoomPillsUI(lm.zone);
+
+            // Open the sidebar with region information
+            const region = SRI_LANKA_REGIONS_DATA[lm.zone];
+            if (region) {
+                updateDestSidebar(region);
+                renderZoneSpotMarkers(region);
+
+                if (activeZoneCircle && leafletMapInstance) {
+                    leafletMapInstance.removeLayer(activeZoneCircle);
+                    activeZoneCircle = null;
+                }
+                const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
+                activeZoneCircle = L.circle(lm.coords, {
+                    color: zoneColor,
+                    weight: 2,
+                    opacity: 0.8,
+                    dashArray: '8, 8',
+                    fillColor: zoneColor,
+                    fillOpacity: 0.08,
+                    radius: 20000
+                }).addTo(leafletMapInstance);
+            }
+
+            // Fly directly and smoothly into the clicked landmark!
+            leafletMapInstance.flyTo(lm.coords, 10.5, { duration: 1.2, easeLinearity: 0.25 });
+
+            setTimeout(function() {
+                isZoomingToTarget = false;
+                updateZoomLevelClass();
+            }, 1400);
         }
 
         function clearSpotMarkers() {
@@ -1077,20 +1126,7 @@
         let activeZoneCircle = null;
 
         function focusDestination(key) {
-            // Update UI buttons with data-zone
-            document.querySelectorAll('.zone-pill').forEach(function(pill) {
-                if (pill.getAttribute('data-zone') === key) {
-                    pill.classList.remove('bg-white', 'text-gray-800', 'border-gray-200');
-                    if (key === 'all') {
-                        pill.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-sm');
-                    } else {
-                        pill.classList.add('bg-[#FF5B00]', 'text-white', 'border-[#FF5B00]', 'shadow-sm');
-                    }
-                } else {
-                    pill.classList.remove('bg-gray-900', 'bg-[#FF5B00]', 'text-white', 'shadow-sm', 'border-[#FF5B00]', 'border-gray-900');
-                    pill.classList.add('bg-white', 'text-gray-800', 'border-gray-200');
-                }
-            });
+            updateZoomPillsUI(key);
 
             // Remove existing glowing zone circle
             if (activeZoneCircle && leafletMapInstance) {
@@ -1099,23 +1135,29 @@
             }
 
             if (key === 'all') {
+                isZoomingToTarget = true;
                 if (leafletMapInstance) {
                     leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
                 }
                 clearSpotMarkers();
                 activeZoneKey = 'all';
                 showAllSriLankaOverview();
+                setTimeout(function() {
+                    isZoomingToTarget = false;
+                }, 1000);
                 return;
             }
 
             const region = SRI_LANKA_REGIONS_DATA[key];
             if (!region || !leafletMapInstance) return;
 
+            isZoomingToTarget = true;
             activeZoneKey = key;
-            // Ensure zoom is at least 10 so spot labels are visible (zoom-detailed mode)
-            const targetZoom = Math.max(region.zoom || 10, 10);
-            leafletMapInstance.flyTo(region.coords, targetZoom, { duration: 1.4, easeLinearity: 0.25 });
-            
+
+            // Render specific spots & sidebar
+            renderZoneSpotMarkers(region);
+            updateDestSidebar(region);
+
             // Glowing Game Zone perimeter circle
             const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
             activeZoneCircle = L.circle(region.coords, {
@@ -1128,11 +1170,13 @@
                 radius: 28000
             }).addTo(leafletMapInstance);
 
-            // Render specific spots on map
-            renderZoneSpotMarkers(region);
+            const targetZoom = Math.max(region.zoom || 10, 10);
+            leafletMapInstance.flyTo(region.coords, targetZoom, { duration: 1.2, easeLinearity: 0.25 });
 
-            // Update sidebar content
-            updateDestSidebar(region);
+            setTimeout(function() {
+                isZoomingToTarget = false;
+                updateZoomLevelClass();
+            }, 1400);
         }
 
         function showAllSriLankaOverview() {
