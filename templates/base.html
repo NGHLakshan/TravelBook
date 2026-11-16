@@ -37,8 +37,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Leaflet CSS for Interactive Destination Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- MapLibre GL JS for 3D Terrain Map -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
     <style>
         body { 
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -66,16 +67,19 @@
         .snap-start {
             scroll-snap-align: start;
         }
-        /* 3D Game / Adventure Map Styling */
+        /* 3D Terrain Map Styling */
         #sriLankaMap {
             width: 100%;
             height: 100%;
             min-height: 380px;
-            background: #aadaff;
+            background: #0a1628;
         }
-        .leaflet-container {
+        .maplibregl-canvas {
             font-family: inherit;
         }
+        .maplibregl-ctrl-logo, .maplibregl-ctrl-attrib { display: none !important; }
+        .maplibregl-ctrl-group { background: rgba(255,255,255,0.95) !important; border-radius: 12px !important; box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important; border: none !important; }
+        .maplibregl-ctrl-group button { width: 32px !important; height: 32px !important; }
         .game-badge-marker {
             background: transparent !important;
             border: none !important;
@@ -199,6 +203,18 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 91, 0, 0); }
         }
 
+        /* MapLibre custom marker wrapper */
+        .game-badge-wrapper {
+            transform: translate(-50%, -100%);
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
         /* LOCAL SPOT PINS (Inside Zone — only shown when zoomed in) */
         .game-spot-pin {
             display: inline-flex;
@@ -220,10 +236,6 @@
             transform: scale(1.1) translateY(-2px);
             border-color: #FF5B00;
             color: #FF5B00;
-        }
-        /* Hide spot pins text when zoomed out — no clutter on island overview */
-        .zoom-compact .game-spot-pin {
-            display: none !important;
         }
     </style>
     {% block extra_head %}{% endblock %}
@@ -390,8 +402,7 @@
         <div id="searchResultsList"></div>
     </div>
 
-    <!-- ===== LEAFLET JS FOR 3D DESTINATION MAP ===== -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- MapLibre GL JS already loaded in <head> -->
 
     <!-- ===== 3D SRI LANKA DESTINATION EXPLORER MODAL ===== -->
     <div id="destinationMapModal" 
@@ -471,7 +482,7 @@
 
                     <!-- Floating Map Theme Switcher (Ultra Colorful 3D Views) -->
                     <div class="absolute top-3 right-3 z-[1000] bg-white/95 backdrop-blur-md p-1 rounded-2xl border border-gray-200/90 shadow-lg flex items-center gap-1">
-                        <button type="button" onclick="switchMapTheme('osm')" id="btnThemeOsm" class="theme-btn px-2.5 py-1 rounded-xl text-xs font-black bg-[#FF5B00] text-white transition shadow-sm cursor-pointer">
+                        <button type="button" onclick="switchMapTheme('topo')" id="btnThemeOsm" class="theme-btn px-2.5 py-1 rounded-xl text-xs font-black bg-[#FF5B00] text-white transition shadow-sm cursor-pointer">
                             🌿 Vibrant Topo
                         </button>
                         <button type="button" onclick="switchMapTheme('natgeo')" id="btnThemeNatgeo" class="theme-btn px-2.5 py-1 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer">
@@ -838,13 +849,94 @@
         // STRICT SRI LANKA BOUNDS — Covers entire island from Point Pedro (North) to Dondra (South)
         const SRI_LANKA_BOUNDS = [[5.70, 79.40], [10.05, 82.10]];
         const SRI_LANKA_STRICT_BOUNDS = [[5.20, 78.80], [10.40, 82.60]];
-        let leafletMapInstance = null;
-        let currentTileLayer = null;
-        let activeThemeKey = 'osm';
-        let landmarkMarkers = [];
-        let spotMarkers = [];
+        let mapInstance = null;         // MapLibre GL JS map
+        let mapMarkers = [];            // landmark MapLibre markers
+        let spotMapMarkers = [];        // spot MapLibre markers
         let activeZoneKey = 'all';
         let isZoomingToTarget = false;
+        let activeZoneCircleLayer = null;
+
+        const MAP_STYLES = {
+            topo: {
+                label: '🌿 Vibrant Topo',
+                btnId: 'btnThemeOsm',
+                style: {
+                    version: 8,
+                    glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+                    sources: {
+                        esri: {
+                            type: 'raster',
+                            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'],
+                            tileSize: 256,
+                            attribution: '© Esri — Topographic Adventure Map'
+                        },
+                        terrain: {
+                            type: 'raster-dem',
+                            tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+                            tileSize: 256,
+                            encoding: 'terrarium',
+                            maxzoom: 15
+                        }
+                    },
+                    layers: [{ id: 'basemap', type: 'raster', source: 'esri' }],
+                    terrain: { source: 'terrain', exaggeration: 2.5 },
+                    sky: { 'sky-color': '#87CEEB', 'sky-horizon-blend': 0.5, 'horizon-color': '#b8d8f0', 'horizon-fog-blend': 0.3, 'fog-color': '#d8e8f0', 'fog-ground-blend': 0.9 }
+                }
+            },
+            natgeo: {
+                label: '🗺️ NatGeo Map',
+                btnId: 'btnThemeNatgeo',
+                style: {
+                    version: 8,
+                    glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+                    sources: {
+                        esri: {
+                            type: 'raster',
+                            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}'],
+                            tileSize: 256,
+                            attribution: '© National Geographic, Esri'
+                        },
+                        terrain: {
+                            type: 'raster-dem',
+                            tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+                            tileSize: 256,
+                            encoding: 'terrarium',
+                            maxzoom: 15
+                        }
+                    },
+                    layers: [{ id: 'basemap', type: 'raster', source: 'esri' }],
+                    terrain: { source: 'terrain', exaggeration: 2.5 },
+                    sky: { 'sky-color': '#87CEEB', 'sky-horizon-blend': 0.5, 'horizon-color': '#b8d8f0', 'horizon-fog-blend': 0.3, 'fog-color': '#d8e8f0', 'fog-ground-blend': 0.9 }
+                }
+            },
+            satellite: {
+                label: '🛰️ 3D Satellite',
+                btnId: 'btnThemeSatellite',
+                style: {
+                    version: 8,
+                    glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+                    sources: {
+                        esri: {
+                            type: 'raster',
+                            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                            tileSize: 256,
+                            attribution: '© Esri — 3D Satellite Aerial'
+                        },
+                        terrain: {
+                            type: 'raster-dem',
+                            tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+                            tileSize: 256,
+                            encoding: 'terrarium',
+                            maxzoom: 15
+                        }
+                    },
+                    layers: [{ id: 'basemap', type: 'raster', source: 'esri' }],
+                    terrain: { source: 'terrain', exaggeration: 2.5 },
+                    sky: { 'sky-color': '#1a2a4a', 'sky-horizon-blend': 0.5, 'horizon-color': '#0a1628', 'horizon-fog-blend': 0.4, 'fog-color': '#0d1f3c', 'fog-ground-blend': 0.9 }
+                }
+            }
+        };
+        let activeThemeKey = 'topo';
 
         function updateZoomPillsUI(zoneKey) {
             document.querySelectorAll('.zone-pill').forEach(function(pill) {
@@ -863,31 +955,22 @@
         }
 
         function updateZoomLevelClass() {
-            if (!leafletMapInstance) return;
-            const currentZoom = leafletMapInstance.getZoom();
+            if (!mapInstance) return;
+            const currentZoom = mapInstance.getZoom();
             const mapEl = document.getElementById('sriLankaMap');
             if (!mapEl) return;
 
-            // Zoom <= 9.2 → compact island overview: only glowing icon dots, ZERO text labels
-            // Zoom >  9.2 → detailed zone view: short name pill appears below each icon
             if (currentZoom <= 9.2) {
                 mapEl.classList.add('zoom-compact');
                 mapEl.classList.remove('zoom-detailed');
 
-                // Auto-clear zone spots ONLY when user manually zooms all the way out (zoom <= 7.6)
                 if (!isZoomingToTarget && activeZoneKey !== 'all' && currentZoom <= 7.6) {
                     clearSpotMarkers();
-                    if (activeZoneCircle && leafletMapInstance) {
-                        leafletMapInstance.removeLayer(activeZoneCircle);
-                        activeZoneCircle = null;
-                    }
+                    removeZoneCircle();
                     activeZoneKey = 'all';
                     updateZoomPillsUI('all');
                     const sidebar = document.getElementById('destSidebar');
                     if (sidebar) sidebar.style.display = 'none';
-                    setTimeout(function() {
-                        if (leafletMapInstance) leafletMapInstance.invalidateSize(true);
-                    }, 50);
                 }
             } else {
                 mapEl.classList.add('zoom-detailed');
@@ -902,18 +985,21 @@
             document.body.style.overflow = 'hidden';
 
             setTimeout(function() {
-                if (!leafletMapInstance) {
+                if (!mapInstance) {
                     initSriLankaMap();
                 } else {
-                    leafletMapInstance.invalidateSize(true);
-                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
+                    mapInstance.resize();
+                    mapInstance.fitBounds(
+                        [[79.40, 5.70], [82.10, 10.05]],
+                        { padding: 20, duration: 500 }
+                    );
                     updateZoomLevelClass();
                 }
             }, 100);
 
             setTimeout(function() {
-                if (leafletMapInstance) {
-                    leafletMapInstance.invalidateSize(true);
+                if (mapInstance) {
+                    mapInstance.resize();
                     updateZoomLevelClass();
                 }
             }, 350);
@@ -926,30 +1012,31 @@
         }
 
         function switchMapTheme(themeKey) {
-            if (!leafletMapInstance) return;
-            const theme = MAP_THEMES[themeKey] || MAP_THEMES.osm;
+            if (!MAP_STYLES[themeKey]) return;
             activeThemeKey = themeKey;
 
-            if (currentTileLayer) {
-                leafletMapInstance.removeLayer(currentTileLayer);
-            }
+            // Clear all markers — will re-add after style loads
+            clearAllMarkers();
 
-            const options = {
-                maxZoom: 18,
-                attribution: theme.attribution
-            };
-            if (theme.subdomains) {
-                options.subdomains = theme.subdomains;
+            const style = MAP_STYLES[themeKey].style;
+            if (mapInstance) {
+                mapInstance.setStyle(style);
+                mapInstance.once('styledata', function() {
+                    // Re-enable terrain after style change
+                    if (!mapInstance.getTerrain()) {
+                        mapInstance.setTerrain({ source: 'terrain', exaggeration: 2.5 });
+                    }
+                    renderGameLandmarks();
+                    updateZoomLevelClass();
+                });
             }
-
-            currentTileLayer = L.tileLayer(theme.url, options).addTo(leafletMapInstance);
 
             // Update UI buttons
             document.querySelectorAll('.theme-btn').forEach(function(btn) {
                 btn.classList.remove('bg-[#FF5B00]', 'text-white', 'shadow-sm');
                 btn.classList.add('text-gray-700', 'hover:bg-gray-100');
             });
-            const activeBtn = document.getElementById('btnTheme' + themeKey.charAt(0).toUpperCase() + themeKey.slice(1));
+            const activeBtn = document.getElementById(MAP_STYLES[themeKey].btnId);
             if (activeBtn) {
                 activeBtn.classList.add('bg-[#FF5B00]', 'text-white', 'shadow-sm');
                 activeBtn.classList.remove('text-gray-700', 'hover:bg-gray-100');
@@ -957,196 +1044,300 @@
         }
 
         function zoomInMap() {
-            if (leafletMapInstance) leafletMapInstance.zoomIn(1);
+            if (mapInstance) mapInstance.zoomIn({ duration: 400 });
         }
 
         function zoomOutMap() {
-            if (leafletMapInstance) leafletMapInstance.zoomOut(1);
+            if (mapInstance) mapInstance.zoomOut({ duration: 400 });
+        }
+
+        function clearAllMarkers() {
+            mapMarkers.forEach(function(m) { m.remove(); });
+            mapMarkers = [];
+            clearSpotMarkers();
+        }
+
+        function clearSpotMarkers() {
+            spotMapMarkers.forEach(function(m) { m.remove(); });
+            spotMapMarkers = [];
+        }
+
+        function removeZoneCircle() {
+            if (mapInstance && activeZoneCircleLayer) {
+                if (mapInstance.getLayer('zone-circle-fill')) mapInstance.removeLayer('zone-circle-fill');
+                if (mapInstance.getLayer('zone-circle-line')) mapInstance.removeLayer('zone-circle-line');
+                if (mapInstance.getSource('zone-circle')) mapInstance.removeSource('zone-circle');
+                activeZoneCircleLayer = null;
+            }
+        }
+
+        function addZoneCircle(coords, color, radiusKm) {
+            removeZoneCircle();
+            if (!mapInstance) return;
+
+            // Create a GeoJSON circle approximation
+            const points = 64;
+            const km = radiusKm || 20;
+            const lat = coords[0], lng = coords[1];
+            const coordinates = [];
+            for (let i = 0; i <= points; i++) {
+                const angle = (i / points) * 2 * Math.PI;
+                const dLat = (km / 111) * Math.cos(angle);
+                const dLng = (km / (111 * Math.cos(lat * Math.PI / 180))) * Math.sin(angle);
+                coordinates.push([lng + dLng, lat + dLat]);
+            }
+
+            const geojson = {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    geometry: { type: 'Polygon', coordinates: [coordinates] }
+                }]
+            };
+
+            mapInstance.addSource('zone-circle', { type: 'geojson', data: geojson });
+            mapInstance.addLayer({
+                id: 'zone-circle-fill',
+                type: 'fill',
+                source: 'zone-circle',
+                paint: { 'fill-color': color, 'fill-opacity': 0.08 }
+            });
+            mapInstance.addLayer({
+                id: 'zone-circle-line',
+                type: 'line',
+                source: 'zone-circle',
+                paint: { 'line-color': color, 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [3, 3] }
+            });
+            activeZoneCircleLayer = true;
         }
 
         function initSriLankaMap() {
             const mapContainer = document.getElementById('sriLankaMap');
-            if (!mapContainer || leafletMapInstance) return;
+            if (!mapContainer || mapInstance) return;
 
-            // Start in compact mode (no text boxes, zero clutter)
             mapContainer.classList.add('zoom-compact');
 
-            // Centered strictly on Sri Lanka island with full teardrop island visibility
-            leafletMapInstance = L.map('sriLankaMap', {
-                center: [7.87, 80.70],
-                zoom: 7.3,
-                minZoom: 6.7,
+            const style = MAP_STYLES['topo'].style;
+
+            mapInstance = new maplibregl.Map({
+                container: 'sriLankaMap',
+                style: style,
+                center: [80.70, 7.87],
+                zoom: 7.0,
+                pitch: 55,
+                bearing: -15,
+                minZoom: 6.0,
                 maxZoom: 18,
-                zoomSnap: 0.1,
-                zoomDelta: 0.5,
-                zoomControl: false,
-                fadeAnimation: true,
-                zoomAnimation: true,
-                inertia: true,
-                maxBounds: SRI_LANKA_STRICT_BOUNDS,
-                maxBoundsViscosity: 0.9
+                maxBounds: [[78.80, 5.20], [82.60, 10.40]],
+                antialias: true,
+                attributionControl: false,
+                navigationControl: false
             });
 
-            // Automatically toggle compact vs detailed pins on zoom & move changes
-            leafletMapInstance.on('zoom zoomend moveend', updateZoomLevelClass);
-
-            // Initialize default vibrant Esri Topo layer (100% working, zero blocks)
-            switchMapTheme('osm');
-
-            // Render compact 3D Game-Style Landmark Badges
-            renderGameLandmarks();
-
-            // Fit tightly to Sri Lanka island shape
-            leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
-
-            // Start in All-Island clean view
-            showAllSriLankaOverview();
-
-            // Ensure tile sizing is immediately recalculated
-            setTimeout(function() {
-                if (leafletMapInstance) {
-                    leafletMapInstance.invalidateSize(true);
-                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
-                    updateZoomLevelClass();
+            mapInstance.on('load', function() {
+                // Ensure terrain is enabled
+                if (!mapInstance.getTerrain()) {
+                    mapInstance.setTerrain({ source: 'terrain', exaggeration: 2.5 });
                 }
-            }, 250);
 
-            // Double-check: force compact labels hidden after all animations settle
+                // Fit to Sri Lanka island
+                mapInstance.fitBounds(
+                    [[79.40, 5.70], [82.10, 10.05]],
+                    { padding: 20, duration: 800, pitch: 55, bearing: -15 }
+                );
+
+                renderGameLandmarks();
+                showAllSriLankaOverview();
+                updateZoomLevelClass();
+            });
+
+            mapInstance.on('zoom', updateZoomLevelClass);
+            mapInstance.on('zoomend', updateZoomLevelClass);
+
+            // Double-check compact labels
             setTimeout(function() { updateZoomLevelClass(); }, 600);
             setTimeout(function() { updateZoomLevelClass(); }, 1200);
         }
 
         function renderGameLandmarks() {
+            if (!mapInstance) return;
+            // Clear existing
+            mapMarkers.forEach(function(m) { m.remove(); });
+            mapMarkers = [];
+
             GAME_LANDMARKS.forEach(function(lm) {
                 const iconEmoji = lm.name.split(' ')[0] || '📍';
                 const displayName = lm.short || lm.name.replace(/^[^\s]+\s*/, '');
                 const glowClass = lm.core ? 'game-pulse-glow' : '';
 
-                const html = `
-                    <div class="game-badge-wrapper" title="${lm.name} — Click to explore zone">
-                        <div class="game-avatar-orb ${lm.color || 'orb-orange'} ${glowClass}">
-                            <span>${iconEmoji}</span>
-                        </div>
-                        <span class="game-pin-label">${displayName}</span>
+                const el = document.createElement('div');
+                el.className = 'game-badge-wrapper';
+                el.title = lm.name + ' — Click to explore zone';
+                el.innerHTML = `
+                    <div class="game-avatar-orb ${lm.color || 'orb-orange'} ${glowClass}" style="width:30px;height:30px;font-size:14px;border:2px solid #fff;">
+                        <span>${iconEmoji}</span>
                     </div>
+                    <span class="game-pin-label">${displayName}</span>
                 `;
 
-                const icon = L.divIcon({
-                    className: 'game-badge-marker',
-                    html: html,
-                    iconSize: [0, 0],
-                    iconAnchor: [0, 0]
-                });
-
-                const marker = L.marker(lm.coords, { icon: icon }).addTo(leafletMapInstance);
-                marker.on('click', function(e) {
-                    if (e && e.originalEvent) {
-                        L.DomEvent.stopPropagation(e);
-                    }
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     zoomToLandmark(lm);
                 });
-                landmarkMarkers.push(marker);
+
+                // [lng, lat] for MapLibre
+                const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+                    .setLngLat([lm.coords[1], lm.coords[0]])
+                    .addTo(mapInstance);
+
+                mapMarkers.push(marker);
             });
         }
 
         function zoomToLandmark(lm) {
-            if (!leafletMapInstance) return;
+            if (!mapInstance) return;
             isZoomingToTarget = true;
             activeZoneKey = lm.zone;
             updateZoomPillsUI(lm.zone);
 
-            // Open the sidebar with region information
             const region = SRI_LANKA_REGIONS_DATA[lm.zone];
             if (region) {
                 updateDestSidebar(region);
                 renderZoneSpotMarkers(region);
-
-                if (activeZoneCircle && leafletMapInstance) {
-                    leafletMapInstance.removeLayer(activeZoneCircle);
-                    activeZoneCircle = null;
-                }
                 const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
-                activeZoneCircle = L.circle(lm.coords, {
-                    color: zoneColor,
-                    weight: 2,
-                    opacity: 0.8,
-                    dashArray: '8, 8',
-                    fillColor: zoneColor,
-                    fillOpacity: 0.08,
-                    radius: 20000
-                }).addTo(leafletMapInstance);
+                setTimeout(function() {
+                    addZoneCircle(lm.coords, zoneColor, 20);
+                }, 300);
             }
 
-            // Fly directly and smoothly into the clicked landmark!
-            leafletMapInstance.flyTo(lm.coords, 10.5, { duration: 1.2, easeLinearity: 0.25 });
+            mapInstance.flyTo({
+                center: [lm.coords[1], lm.coords[0]],
+                zoom: 10.5,
+                pitch: 50,
+                bearing: -10,
+                duration: 1400,
+                easing: function(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+            });
 
             setTimeout(function() {
                 isZoomingToTarget = false;
                 updateZoomLevelClass();
-            }, 1400);
-        }
-
-        function clearSpotMarkers() {
-            spotMarkers.forEach(function(m) {
-                leafletMapInstance.removeLayer(m);
-            });
-            spotMarkers = [];
+            }, 1600);
         }
 
         function renderZoneSpotMarkers(region) {
             clearSpotMarkers();
-            if (!region || !region.spots) return;
+            if (!region || !region.spots || !mapInstance) return;
 
-            region.spots.forEach(function(spot, index) {
-                const html = `
-                    <div class="game-badge-wrapper" title="${spot.name} (${spot.type})">
-                        <div class="game-spot-pin">
-                            <span class="text-xs">${spot.icon || '📍'}</span>
-                            <span>${spot.name}</span>
-                        </div>
+            region.spots.forEach(function(spot) {
+                const el = document.createElement('div');
+                el.className = 'game-badge-wrapper';
+                el.title = spot.name + ' (' + spot.type + ')';
+                el.innerHTML = `
+                    <div class="game-spot-pin">
+                        <span class="text-xs">${spot.icon || '📍'}</span>
+                        <span>${spot.name}</span>
                     </div>
                 `;
-
-                const icon = L.divIcon({
-                    className: 'game-badge-marker',
-                    html: html,
-                    iconSize: [0, 0],
-                    iconAnchor: [0, 0]
-                });
-
-                const marker = L.marker(spot.coords, { icon: icon }).addTo(leafletMapInstance);
-                marker.on('click', function() {
-                    leafletMapInstance.flyTo(spot.coords, 14, { duration: 1.2, easeLinearity: 0.25 });
+                el.addEventListener('click', function() {
+                    mapInstance.flyTo({
+                        center: [spot.coords[1], spot.coords[0]],
+                        zoom: 14,
+                        pitch: 45,
+                        duration: 1200
+                    });
                     highlightSpotCard(spot.name);
                 });
-                spotMarkers.push(marker);
+
+                const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+                    .setLngLat([spot.coords[1], spot.coords[0]])
+                    .addTo(mapInstance);
+
+                spotMapMarkers.push(marker);
             });
         }
 
-        let activeZoneCircle = null;
-
         function focusDestination(key) {
             updateZoomPillsUI(key);
-
-            // Remove existing glowing zone circle
-            if (activeZoneCircle && leafletMapInstance) {
-                leafletMapInstance.removeLayer(activeZoneCircle);
-                activeZoneCircle = null;
-            }
+            removeZoneCircle();
 
             if (key === 'all') {
                 isZoomingToTarget = true;
-                if (leafletMapInstance) {
-                    leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
-                }
                 clearSpotMarkers();
                 activeZoneKey = 'all';
                 showAllSriLankaOverview();
-                setTimeout(function() {
-                    isZoomingToTarget = false;
-                }, 1000);
+                if (mapInstance) {
+                    mapInstance.flyTo({
+                        center: [80.70, 7.87],
+                        zoom: 7.0,
+                        pitch: 55,
+                        bearing: -15,
+                        duration: 1200
+                    });
+                }
+                setTimeout(function() { isZoomingToTarget = false; }, 1400);
                 return;
             }
+
+            const region = SRI_LANKA_REGIONS_DATA[key];
+            if (!region || !mapInstance) return;
+
+            isZoomingToTarget = true;
+            activeZoneKey = key;
+
+            renderZoneSpotMarkers(region);
+            updateDestSidebar(region);
+
+            const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
+            setTimeout(function() {
+                addZoneCircle(region.coords, zoneColor, 28);
+            }, 300);
+
+            mapInstance.flyTo({
+                center: [region.coords[1], region.coords[0]],
+                zoom: Math.max(region.zoom || 10, 10),
+                pitch: 50,
+                bearing: -10,
+                duration: 1400
+            });
+
+            setTimeout(function() {
+                isZoomingToTarget = false;
+                updateZoomLevelClass();
+            }, 1600);
+        }
+
+        function showAllSriLankaOverview() {
+            const sidebar = document.getElementById('destSidebar');
+            if (sidebar) sidebar.style.display = 'none';
+
+            document.getElementById('destImg').src = 'https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=800&q=80';
+            const badgeEl = document.getElementById('destBadge');
+            badgeEl.textContent = '🗺️ COMPLETE ISLAND GUIDE';
+            badgeEl.className = 'absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow bg-gray-900';
+
+            let allSpots = [];
+            Object.keys(SRI_LANKA_REGIONS_DATA).forEach(function(rKey) {
+                allSpots = allSpots.concat(SRI_LANKA_REGIONS_DATA[rKey].spots);
+            });
+
+            document.getElementById('destTitle').textContent = 'Sri Lanka 8 Adventure Zones (' + allSpots.length + ' Attractions)';
+            document.getElementById('destDesc').textContent = 'Explore our verified local network across Jaffna, Ella, Nuwara Eliya, Yala Safari, Colombo VIP Cabs, and every scenic corner of Sri Lanka.';
+            document.getElementById('spotsCountLabel').textContent = 'Total Sights in Sri Lanka:';
+            document.getElementById('spotsCountBadge').textContent = allSpots.length + ' Places';
+
+            renderSpotsInSidebar(allSpots);
+
+            const actionBtn = document.getElementById('destActionBtn');
+            actionBtn.innerHTML = `<span>Explore All Experiences ➔</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
+            actionBtn.onclick = function() {
+                closeMapModal();
+                window.location.href = '/#packages-section';
+            };
+
+            const waBtn = document.getElementById('destWhatsappBtn');
+            waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent('Hello CeylonGo, I would like to plan a complete Sri Lanka itinerary!');
+        }
 
             const region = SRI_LANKA_REGIONS_DATA[key];
             if (!region || !leafletMapInstance) return;
@@ -1224,14 +1415,11 @@
         }
 
         function updateDestSidebar(region) {
-            // Reveal sidebar when a destination or pin is clicked
             const sidebar = document.getElementById('destSidebar');
             if (sidebar) {
                 sidebar.style.display = 'flex';
-                if (leafletMapInstance) {
-                    setTimeout(function() {
-                        leafletMapInstance.invalidateSize(true);
-                    }, 60);
+                if (mapInstance) {
+                    setTimeout(function() { mapInstance.resize(); }, 60);
                 }
             }
 
@@ -1251,9 +1439,7 @@
 
             const actionBtn = document.getElementById('destActionBtn');
             actionBtn.innerHTML = `<span>${region.btnText || 'Explore Experiences'}</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
-            actionBtn.onclick = function() {
-                viewRegionTours(region.id);
-            };
+            actionBtn.onclick = function() { viewRegionTours(region.id); };
 
             const waBtn = document.getElementById('destWhatsappBtn');
             const message = `Hello CeylonGo, I would like to plan a custom journey / chauffeur ride covering ${region.waQuery || region.title}!`;
@@ -1269,17 +1455,21 @@
                 return;
             }
 
-            spots.forEach(function(s, idx) {
+            spots.forEach(function(s) {
                 const item = document.createElement('div');
                 item.className = 'spot-item p-2 rounded-xl bg-gray-50 hover:bg-orange-50/70 border border-gray-100 hover:border-orange-200 transition cursor-pointer flex items-center justify-between gap-2 text-xs';
                 item.id = 'spot-' + s.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
                 item.onclick = function() {
-                    if (leafletMapInstance && s.coords) {
-                        leafletMapInstance.flyTo(s.coords, 14, { duration: 1.2 });
+                    if (mapInstance && s.coords) {
+                        mapInstance.flyTo({
+                            center: [s.coords[1], s.coords[0]],
+                            zoom: 14,
+                            pitch: 45,
+                            duration: 1200
+                        });
                         highlightSpotCard(s.name);
                     }
                 };
-
                 item.innerHTML = `
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="text-sm flex-shrink-0">${s.icon || '📍'}</span>
@@ -1337,9 +1527,7 @@
         function viewRegionTours(regionId) {
             const region = SRI_LANKA_REGIONS_DATA[regionId];
             if (!region) return;
-
             closeMapModal();
-
             const url = new URL(window.location.origin + '/');
             if (region.catSlug) {
                 url.searchParams.set('cat', region.catSlug);
@@ -1352,31 +1540,12 @@
 
         // Close on backdrop click
         document.getElementById('destinationMapModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeMapModal();
-            }
+            if (e.target === this) { closeMapModal(); }
         });
 
         // Close on escape
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeMapModal();
-            }
-        });
-    </script>
-
-        // Close on backdrop click
-        document.getElementById('destinationMapModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeMapModal();
-            }
-        });
-
-        // Close on escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeMapModal();
-            }
+            if (e.key === 'Escape') { closeMapModal(); }
         });
     </script>
 </body>
