@@ -498,7 +498,45 @@
                     <!-- Map overlay helper badge -->
                     <div class="absolute bottom-3 left-3 z-[1000] pointer-events-none bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-md flex items-center gap-2 text-xs font-bold text-gray-700 hidden sm:flex">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Interactive 3D Game Map • Smooth Zoom & Pan</span>
+                        <span>Interactive Destination Map • Smooth Zoom & Pan</span>
+                    </div>
+
+                    <!-- Floating Live Driving Route Card (Shown when user clicks Get Directions) -->
+                    <div id="mapRouteCard" style="display:none;" class="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-sm z-[1001] bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-orange-200 shadow-2xl flex flex-col gap-2 transition-all">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold text-sm flex-shrink-0">🚗</span>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-black text-gray-900 truncate" id="routeDestTitle">Route to Destination</p>
+                                    <p class="text-[10px] text-gray-500 truncate" id="routeStartTitle">From: Colombo Airport (BIA)</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="clearActiveRoute()" title="Close route" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-xs transition cursor-pointer flex-shrink-0">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between bg-orange-50/90 px-3 py-1.5 rounded-xl border border-orange-200/80 text-xs">
+                            <span class="font-extrabold text-orange-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-road text-[11px]"></i>
+                                <span id="routeDistanceText">Calculating...</span>
+                            </span>
+                            <span class="text-gray-300">•</span>
+                            <span class="font-extrabold text-gray-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock text-[11px] text-gray-400"></i>
+                                <span id="routeDurationText">-- hrs</span>
+                            </span>
+                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Scenic Route</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                            <a id="routeGmapsBtn" href="#" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 transition text-center shadow-sm">
+                                <i class="fa-solid fa-location-arrow text-[10px]"></i>
+                                <span>Google Maps</span>
+                            </a>
+                            <a id="routeBookRideBtn" href="#" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 transition text-center shadow-sm">
+                                <i class="fa-brands fa-whatsapp text-[11px]"></i>
+                                <span>Book Cab</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -519,6 +557,18 @@
                         <p id="destDesc" class="text-xs text-gray-500 mt-1 leading-relaxed">
                             Our primary flagship hub! Mist-covered mountain summits, direct verified guides, waterfalls, and tea estate trails.
                         </p>
+
+                        <!-- Live Real-Time Weather Widget -->
+                        <div id="destWeatherContainer" class="mt-2.5 flex items-center gap-2.5 p-2 rounded-xl bg-gradient-to-r from-sky-50 via-blue-50/70 to-orange-50/40 border border-sky-100 text-sky-950 text-xs shadow-sm">
+                            <div id="destWeatherIcon" class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-lg flex-shrink-0">⛅</div>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <span id="destWeatherTemp" class="font-extrabold text-xs text-gray-900">Checking weather...</span>
+                                    <span id="destWeatherCondition" class="text-[9px] font-extrabold text-sky-700 bg-sky-100/80 px-1.5 py-0.5 rounded-md">LIVE</span>
+                                </div>
+                                <p id="destWeatherDetail" class="text-[10px] text-gray-500 truncate mt-0.5">Fetching live temperature & wind...</p>
+                            </div>
+                        </div>
 
                         <!-- Search Filter for Spots -->
                         <div class="mt-3 relative">
@@ -544,6 +594,14 @@
 
                     <!-- Bottom Action Buttons -->
                     <div class="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2 flex-shrink-0">
+                        <!-- Directions Action Button -->
+                        <button id="destDirectionsBtn" 
+                                type="button" 
+                                onclick="getDirectionsForCurrentZone()" 
+                                class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-route text-xs"></i>
+                            <span>Get Driving Route (Directions)</span>
+                        </button>
                         <button id="destActionBtn" 
                                 type="button" 
                                 onclick="viewRegionTours('ella_nuwara_eliya')" 
@@ -845,6 +903,12 @@
         let spotMarkers = [];
         let activeZoneKey = 'all';
         let isZoomingToTarget = false;
+        let activeRoutePolyline = null;
+        let activeRouteStartMarker = null;
+        const AIRPORT_START_COORDS = [7.1808, 79.8841]; // Bandaranaike International Airport (BIA)
+        let currentActiveZoneCoords = null;
+        let currentActiveZoneTitle = '';
+        const weatherCache = {};
 
         function updateZoomPillsUI(zoneKey) {
             document.querySelectorAll('.zone-pill').forEach(function(pill) {
@@ -1184,6 +1248,13 @@
             const sidebar = document.getElementById('destSidebar');
             if (sidebar) sidebar.style.display = 'none';
 
+            // Clear weather widget & active route on island overview
+            const wBox = document.getElementById('destWeatherContainer');
+            if (wBox) wBox.style.display = 'none';
+            clearActiveRoute();
+            currentActiveZoneCoords = null;
+            currentActiveZoneTitle = '';
+
             if (leafletMapInstance) {
                 setTimeout(function() {
                     leafletMapInstance.invalidateSize(true);
@@ -1235,6 +1306,12 @@
                 }
             }
 
+            currentActiveZoneCoords = region.coords;
+            currentActiveZoneTitle = region.title;
+
+            // Fetch and display live weather for this zone
+            fetchZoneWeather(region.coords, region.title);
+
             document.getElementById('destImg').src = region.img;
 
             const badgeEl = document.getElementById('destBadge');
@@ -1277,9 +1354,11 @@
                     if (leafletMapInstance && s.coords) {
                         leafletMapInstance.flyTo(s.coords, 14, { duration: 1.2 });
                         highlightSpotCard(s.name);
+                        fetchZoneWeather(s.coords, s.name);
                     }
                 };
 
+                const safeName = s.name.replace(/'/g, "\\'");
                 item.innerHTML = `
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="text-sm flex-shrink-0">${s.icon || '📍'}</span>
@@ -1288,9 +1367,17 @@
                             <p class="text-[10px] text-gray-400 truncate">${s.type || 'Attraction'}</p>
                         </div>
                     </div>
-                    <span class="text-[9px] font-black uppercase text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-md flex-shrink-0">
-                        Pin Map ➔
-                    </span>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <button type="button" 
+                                onclick="event.stopPropagation(); calculateAndDrawRoute([${s.coords[0]}, ${s.coords[1]}], '${safeName}');" 
+                                class="text-[9px] font-black uppercase text-blue-700 bg-blue-100/90 hover:bg-blue-200 px-2 py-0.5 rounded-md transition cursor-pointer" 
+                                title="Get driving route from Airport">
+                            🚗 Route
+                        </button>
+                        <span class="text-[9px] font-black uppercase text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-md">
+                            Pin ➔
+                        </span>
+                    </div>
                 `;
                 container.appendChild(item);
             });
@@ -1350,29 +1437,225 @@
             window.location.href = url.toString();
         }
 
-        // Close on backdrop click
+        // ==========================================
+        // LIVE WEATHER SYSTEM (OPEN-METEO API)
+        // ==========================================
+        function getWeatherMeta(code, isDay) {
+            const table = {
+                0: { text: 'Clear Sky', icon: isDay ? '☀️' : '🌙' },
+                1: { text: 'Mainly Clear', icon: isDay ? '🌤️' : '🌙' },
+                2: { text: 'Partly Cloudy', icon: '⛅' },
+                3: { text: 'Overcast Clouds', icon: '☁️' },
+                45: { text: 'Misty Fog', icon: '🌫️' },
+                48: { text: 'Mountain Mist', icon: '🌫️' },
+                51: { text: 'Light Drizzle', icon: '🌦️' },
+                53: { text: 'Moderate Drizzle', icon: '🌦️' },
+                55: { text: 'Dense Drizzle', icon: '🌧️' },
+                61: { text: 'Light Rain', icon: '🌧️' },
+                63: { text: 'Moderate Rain', icon: '🌧️' },
+                65: { text: 'Heavy Tropical Rain', icon: '⛈️' },
+                80: { text: 'Light Showers', icon: '🌦️' },
+                81: { text: 'Passing Showers', icon: '🌦️' },
+                82: { text: 'Heavy Showers', icon: '⛈️' },
+                95: { text: 'Thunderstorm', icon: '⛈️' }
+            };
+            return table[code] || { text: 'Tropical Weather', icon: '⛅' };
+        }
+
+        async function fetchZoneWeather(coords, title) {
+            const container = document.getElementById('destWeatherContainer');
+            const tempEl = document.getElementById('destWeatherTemp');
+            const iconEl = document.getElementById('destWeatherIcon');
+            const condEl = document.getElementById('destWeatherCondition');
+            const detailEl = document.getElementById('destWeatherDetail');
+
+            if (!container || !coords) return;
+            container.style.display = 'flex';
+
+            const cacheKey = coords[0].toFixed(2) + '_' + coords[1].toFixed(2);
+            if (weatherCache[cacheKey]) {
+                applyWeatherData(weatherCache[cacheKey], title);
+                return;
+            }
+
+            tempEl.textContent = 'Checking weather...';
+            detailEl.textContent = 'Fetching live data for ' + (title || 'area') + '...';
+
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords[0]}&longitude=${coords[1]}&current_weather=true`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Weather API error');
+                const data = await res.json();
+                if (data && data.current_weather) {
+                    const cw = data.current_weather;
+                    const meta = getWeatherMeta(cw.weathercode, cw.is_day !== undefined ? cw.is_day : 1);
+                    const weatherObj = {
+                        temp: Math.round(cw.temperature) + '°C',
+                        wind: Math.round(cw.windspeed) + ' km/h',
+                        condition: meta.text,
+                        icon: meta.icon
+                    };
+                    weatherCache[cacheKey] = weatherObj;
+                    applyWeatherData(weatherObj, title);
+                }
+            } catch (err) {
+                console.warn('Weather fetch fallback:', err);
+                tempEl.textContent = '26°C - 29°C';
+                iconEl.textContent = '⛅';
+                condEl.textContent = 'PLEASANT';
+                detailEl.textContent = 'Tropical travel climate • Great day to explore';
+            }
+        }
+
+        function applyWeatherData(w, title) {
+            const tempEl = document.getElementById('destWeatherTemp');
+            const iconEl = document.getElementById('destWeatherIcon');
+            const condEl = document.getElementById('destWeatherCondition');
+            const detailEl = document.getElementById('destWeatherDetail');
+
+            if (tempEl) tempEl.textContent = w.temp;
+            if (iconEl) iconEl.textContent = w.icon;
+            if (condEl) condEl.textContent = w.condition.toUpperCase();
+            if (detailEl) detailEl.textContent = `Wind: ${w.wind} • Current weather in ${title || 'region'}`;
+        }
+
+        // ==========================================
+        // DIRECTIONS & LIVE ROUTING SYSTEM
+        // ==========================================
+        function getDirectionsForCurrentZone() {
+            if (currentActiveZoneCoords) {
+                calculateAndDrawRoute(currentActiveZoneCoords, currentActiveZoneTitle || 'Destination');
+            } else if (SRI_LANKA_REGIONS_DATA[activeZoneKey]) {
+                const reg = SRI_LANKA_REGIONS_DATA[activeZoneKey];
+                calculateAndDrawRoute(reg.coords, reg.title);
+            }
+        }
+
+        async function calculateAndDrawRoute(destCoords, destName) {
+            if (!leafletMapInstance || !destCoords) return;
+
+            const card = document.getElementById('mapRouteCard');
+            const titleEl = document.getElementById('routeDestTitle');
+            const distEl = document.getElementById('routeDistanceText');
+            const durEl = document.getElementById('routeDurationText');
+            const gmapsBtn = document.getElementById('routeGmapsBtn');
+            const bookBtn = document.getElementById('routeBookRideBtn');
+
+            if (card) {
+                card.style.display = 'flex';
+                if (titleEl) titleEl.textContent = 'Route to ' + destName;
+                if (distEl) distEl.textContent = 'Calculating...';
+                if (durEl) durEl.textContent = 'Estimating...';
+            }
+
+            clearActiveRoute();
+
+            // Set up Google Maps navigation link
+            if (gmapsBtn) {
+                gmapsBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${AIRPORT_START_COORDS[0]},${AIRPORT_START_COORDS[1]}&destination=${destCoords[0]},${destCoords[1]}&travelmode=driving`;
+            }
+
+            // Set up WhatsApp Cab Booking link
+            if (bookBtn) {
+                const cleanName = destName.replace(/^[^\w\s]+\s*/, '');
+                const waText = `Hello CeylonGo, I would like to book a private VIP cab / chauffeur ride from Colombo Airport (BIA) to ${cleanName}!`;
+                bookBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(waText);
+            }
+
+            // Airport Start Icon Marker on map
+            const startIcon = L.divIcon({
+                className: 'route-start-marker',
+                html: `<div style="background:#2563eb;color:#ffffff;border-radius:9999px;padding:3px 9px;font-size:10px;font-weight:900;border:2px solid #ffffff;box-shadow:0 4px 14px rgba(0,0,0,0.35);white-space:nowrap;display:flex;align-items:center;gap:4px;">
+                    <span>✈️</span><span>Airport (BIA)</span>
+                </div>`,
+                iconSize: [0, 0],
+                iconAnchor: [45, 15]
+            });
+            activeRouteStartMarker = L.marker(AIRPORT_START_COORDS, { icon: startIcon }).addTo(leafletMapInstance);
+
+            try {
+                // Query OSRM driving route from Colombo Airport to destination
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${AIRPORT_START_COORDS[1]},${AIRPORT_START_COORDS[0]};${destCoords[1]},${destCoords[0]}?overview=full&geometries=geojson`;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+                const res = await fetch(osrmUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error('OSRM error');
+                const data = await res.json();
+
+                if (data && data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+
+                    const distanceKm = Math.round(route.distance / 1000);
+                    const hours = Math.floor(route.duration / 3600);
+                    const mins = Math.round((route.duration % 3600) / 60);
+                    const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
+
+                    if (distEl) distEl.textContent = distanceKm + ' km';
+                    if (durEl) durEl.textContent = durationStr;
+
+                    // Draw glowing orange route polyline on map
+                    activeRoutePolyline = L.polyline(latLngs, {
+                        color: '#FF5B00',
+                        weight: 4.5,
+                        opacity: 0.9,
+                        dashArray: '8, 6',
+                        lineCap: 'round',
+                        lineJoin: 'round'
+                    }).addTo(leafletMapInstance);
+
+                    leafletMapInstance.fitBounds(activeRoutePolyline.getBounds(), { padding: [50, 50] });
+                    return;
+                }
+            } catch (err) {
+                console.warn('OSRM routing fetch failed or timed out, using geodesic estimation:', err);
+            }
+
+            // Fallback estimation if OSRM is slow or offline
+            const dLat = (destCoords[0] - AIRPORT_START_COORDS[0]) * 111;
+            const dLng = (destCoords[1] - AIRPORT_START_COORDS[1]) * 111 * Math.cos(AIRPORT_START_COORDS[0] * Math.PI / 180);
+            const straightKm = Math.sqrt(dLat * dLat + dLng * dLng);
+            const roadKm = Math.round(straightKm * 1.38); // Standard Sri Lanka terrain road multiplier
+            const estHours = (roadKm / 48).toFixed(1);
+
+            if (distEl) distEl.textContent = `~${roadKm} km`;
+            if (durEl) durEl.textContent = `~${estHours} hrs`;
+
+            // Draw direct polyline
+            activeRoutePolyline = L.polyline([AIRPORT_START_COORDS, destCoords], {
+                color: '#FF5B00',
+                weight: 4,
+                opacity: 0.85,
+                dashArray: '8, 8'
+            }).addTo(leafletMapInstance);
+
+            leafletMapInstance.fitBounds(activeRoutePolyline.getBounds(), { padding: [50, 50] });
+        }
+
+        function clearActiveRoute() {
+            if (activeRoutePolyline && leafletMapInstance) {
+                leafletMapInstance.removeLayer(activeRoutePolyline);
+                activeRoutePolyline = null;
+            }
+            if (activeRouteStartMarker && leafletMapInstance) {
+                leafletMapInstance.removeLayer(activeRouteStartMarker);
+                activeRouteStartMarker = null;
+            }
+            const card = document.getElementById('mapRouteCard');
+            if (card) card.style.display = 'none';
+        }
+
+        // Close modal on backdrop click
         document.getElementById('destinationMapModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeMapModal();
             }
         });
 
-        // Close on escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeMapModal();
-            }
-        });
-    </script>
-
-        // Close on backdrop click
-        document.getElementById('destinationMapModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeMapModal();
-            }
-        });
-
-        // Close on escape
+        // Close modal on escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeMapModal();
