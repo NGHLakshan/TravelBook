@@ -501,39 +501,57 @@
                         <span>Interactive Destination Map • Smooth Zoom & Pan</span>
                     </div>
 
-                    <!-- Floating Live Driving Route Card (Shown when user clicks Get Directions) -->
-                    <div id="mapRouteCard" style="display:none;" class="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-sm z-[1001] bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-orange-200 shadow-2xl flex flex-col gap-2 transition-all">
+                    <!-- Floating Live Driving Route Card (Google Maps Real Road Route) -->
+                    <div id="mapRouteCard" style="display:none;" class="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-md z-[1001] bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-blue-200 shadow-2xl flex flex-col gap-2.5 transition-all">
                         <div class="flex items-start justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
-                                <span class="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold text-sm flex-shrink-0">🚗</span>
+                                <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow-sm">🚗</span>
                                 <div class="min-w-0">
                                     <p class="text-xs font-black text-gray-900 truncate" id="routeDestTitle">Route to Destination</p>
-                                    <p class="text-[10px] text-gray-500 truncate" id="routeStartTitle">From: Colombo Airport (BIA)</p>
+                                    <p class="text-[10px] text-gray-500 truncate" id="routeStartTitle">From: Detecting your location...</p>
                                 </div>
                             </div>
                             <button type="button" onclick="clearActiveRoute()" title="Close route" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-xs transition cursor-pointer flex-shrink-0">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
-                        <div class="flex items-center justify-between bg-orange-50/90 px-3 py-1.5 rounded-xl border border-orange-200/80 text-xs">
-                            <span class="font-extrabold text-orange-700 flex items-center gap-1.5">
-                                <i class="fa-solid fa-road text-[11px]"></i>
-                                <span id="routeDistanceText">Calculating...</span>
-                            </span>
-                            <span class="text-gray-300">•</span>
-                            <span class="font-extrabold text-gray-700 flex items-center gap-1.5">
-                                <i class="fa-solid fa-clock text-[11px] text-gray-400"></i>
-                                <span id="routeDurationText">-- hrs</span>
-                            </span>
-                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Scenic Route</span>
+
+                        <!-- Start Origin Toggle: My Live GPS Location vs Colombo Airport -->
+                        <div class="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-xl text-[10px] font-bold">
+                            <button type="button" id="btnRouteGps" onclick="switchRouteOrigin('gps')" class="flex-1 py-1 px-2 rounded-lg bg-white text-blue-700 shadow-xs flex items-center justify-center gap-1 transition cursor-pointer">
+                                <i class="fa-solid fa-location-crosshairs text-[10px] text-blue-600"></i>
+                                <span>My Location (GPS)</span>
+                            </button>
+                            <button type="button" id="btnRouteAirport" onclick="switchRouteOrigin('airport')" class="flex-1 py-1 px-2 rounded-lg text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1 transition cursor-pointer">
+                                <span>✈️ Airport (BIA)</span>
+                            </button>
                         </div>
+
+                        <!-- Real Road Distance & Time Banner -->
+                        <div class="flex items-center justify-between bg-blue-50/90 px-3 py-2 rounded-xl border border-blue-100 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">🛣️</span>
+                                <div>
+                                    <span id="routeDistanceText" class="font-black text-blue-950 text-sm">Calculating km...</span>
+                                    <p class="text-[9px] text-blue-700/80 font-bold" id="routeSubtitle">Real Driving Road Distance</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span id="routeDurationText" class="font-black text-gray-900 text-xs flex items-center justify-end gap-1">
+                                    <i class="fa-solid fa-clock text-[10px] text-gray-400"></i>
+                                    <span>-- hrs</span>
+                                </span>
+                                <span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-md inline-block mt-0.5">Real Roads</span>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-1.5 pt-0.5">
-                            <a id="routeGmapsBtn" href="#" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 transition text-center shadow-sm">
-                                <i class="fa-solid fa-location-arrow text-[10px]"></i>
-                                <span>Google Maps</span>
+                            <a id="routeGmapsBtn" href="#" target="_blank" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition text-center shadow-md shadow-blue-500/20">
+                                <i class="fa-solid fa-location-arrow text-xs"></i>
+                                <span>Google Maps GPS</span>
                             </a>
-                            <a id="routeBookRideBtn" href="#" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 transition text-center shadow-sm">
-                                <i class="fa-brands fa-whatsapp text-[11px]"></i>
+                            <a id="routeBookRideBtn" href="#" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition text-center shadow-md shadow-emerald-500/20">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
                                 <span>Book Cab</span>
                             </a>
                         </div>
@@ -910,7 +928,13 @@
         let activeZoneKey = 'all';
         let isZoomingToTarget = false;
         let activeRoutePolyline = null;
+        let activeRouteCasing = null;
         let activeRouteStartMarker = null;
+        let activeRouteDestMarker = null;
+        let currentTargetCoords = null;
+        let currentTargetName = '';
+        let activeOriginMode = 'gps';
+        let cachedUserGpsCoords = null;
         const AIRPORT_START_COORDS = [7.1808, 79.8841]; // Bandaranaike International Airport (BIA)
         let currentActiveZoneCoords = null;
         let currentActiveZoneTitle = '';
@@ -1526,8 +1550,64 @@
         }
 
         // ==========================================
-        // DIRECTIONS & LIVE ROUTING SYSTEM
+        // DIRECTIONS & REAL-ROAD ROUTING SYSTEM (GOOGLE MAPS STYLE)
         // ==========================================
+        function getUserGpsLocation(callback) {
+            if (cachedUserGpsCoords) {
+                if (callback) callback(cachedUserGpsCoords, 'My Live Location 📍');
+                return;
+            }
+
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        cachedUserGpsCoords = [lat, lng];
+                        if (callback) callback(cachedUserGpsCoords, 'My Current Location 📍');
+                    },
+                    function(err) {
+                        console.warn('Geolocation denied or unavailable:', err);
+                        // Default to Colombo Airport if GPS is denied
+                        if (callback) callback(AIRPORT_START_COORDS, 'Colombo Airport (BIA) ✈️');
+                    },
+                    { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+                );
+            } else {
+                if (callback) callback(AIRPORT_START_COORDS, 'Colombo Airport (BIA) ✈️');
+            }
+        }
+
+        function switchRouteOrigin(mode) {
+            activeOriginMode = mode;
+            const btnGps = document.getElementById('btnRouteGps');
+            const btnAirport = document.getElementById('btnRouteAirport');
+
+            if (mode === 'gps') {
+                if (btnGps) {
+                    btnGps.className = 'flex-1 py-1 px-2 rounded-lg bg-white text-blue-700 shadow-xs flex items-center justify-center gap-1 transition cursor-pointer font-bold';
+                }
+                if (btnAirport) {
+                    btnAirport.className = 'flex-1 py-1 px-2 rounded-lg text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1 transition cursor-pointer';
+                }
+                if (currentTargetCoords) {
+                    getUserGpsLocation(function(coords, label) {
+                        calculateAndDrawRoute(currentTargetCoords, currentTargetName, coords, label);
+                    });
+                }
+            } else {
+                if (btnAirport) {
+                    btnAirport.className = 'flex-1 py-1 px-2 rounded-lg bg-white text-blue-700 shadow-xs flex items-center justify-center gap-1 transition cursor-pointer font-bold';
+                }
+                if (btnGps) {
+                    btnGps.className = 'flex-1 py-1 px-2 rounded-lg text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1 transition cursor-pointer';
+                }
+                if (currentTargetCoords) {
+                    calculateAndDrawRoute(currentTargetCoords, currentTargetName, AIRPORT_START_COORDS, 'Colombo Airport (BIA) ✈️');
+                }
+            }
+        }
+
         function getDirectionsForCurrentZone() {
             if (currentActiveZoneCoords) {
                 calculateAndDrawRoute(currentActiveZoneCoords, currentActiveZoneTitle || 'Destination');
@@ -1537,11 +1617,15 @@
             }
         }
 
-        async function calculateAndDrawRoute(destCoords, destName) {
+        async function calculateAndDrawRoute(destCoords, destName, forceOriginCoords, forceOriginLabel) {
             if (!leafletMapInstance || !destCoords) return;
+
+            currentTargetCoords = destCoords;
+            currentTargetName = destName;
 
             const card = document.getElementById('mapRouteCard');
             const titleEl = document.getElementById('routeDestTitle');
+            const startTitleEl = document.getElementById('routeStartTitle');
             const distEl = document.getElementById('routeDistanceText');
             const durEl = document.getElementById('routeDurationText');
             const gmapsBtn = document.getElementById('routeGmapsBtn');
@@ -1550,91 +1634,148 @@
             if (card) {
                 card.style.display = 'flex';
                 if (titleEl) titleEl.textContent = 'Route to ' + destName;
-                if (distEl) distEl.textContent = 'Calculating...';
+                if (distEl) distEl.textContent = 'Calculating km...';
                 if (durEl) durEl.textContent = 'Estimating...';
             }
 
             clearActiveRoute();
 
-            // Set up Google Maps navigation link
+            // Determine origin coordinates
+            let originCoords = forceOriginCoords;
+            let originLabel = forceOriginLabel;
+
+            if (!originCoords) {
+                if (activeOriginMode === 'gps') {
+                    if (startTitleEl) startTitleEl.textContent = 'From: Detecting your GPS location...';
+                    getUserGpsLocation(function(c, lbl) {
+                        calculateAndDrawRoute(destCoords, destName, c, lbl);
+                    });
+                    return;
+                } else {
+                    originCoords = AIRPORT_START_COORDS;
+                    originLabel = 'Colombo Airport (BIA) ✈️';
+                }
+            }
+
+            if (startTitleEl) startTitleEl.textContent = 'From: ' + originLabel;
+
+            // Set up Google Maps direct turn-by-turn navigation link
             if (gmapsBtn) {
-                gmapsBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${AIRPORT_START_COORDS[0]},${AIRPORT_START_COORDS[1]}&destination=${destCoords[0]},${destCoords[1]}&travelmode=driving`;
+                gmapsBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${originCoords[0]},${originCoords[1]}&destination=${destCoords[0]},${destCoords[1]}&travelmode=driving`;
             }
 
             // Set up WhatsApp Cab Booking link
             if (bookBtn) {
-                const cleanName = destName.replace(/^[^\w\s]+\s*/, '');
-                const waText = `Hello CeylonGo, I would like to book a private VIP cab / chauffeur ride from Colombo Airport (BIA) to ${cleanName}!`;
+                const cleanDest = destName.replace(/^[^\w\s]+\s*/, '');
+                const cleanOrigin = originLabel.replace(/^[^\w\s]+\s*/, '');
+                const waText = `Hello CeylonGo, I would like to book a private VIP cab ride from ${cleanOrigin} to ${cleanDest}!`;
                 bookBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(waText);
             }
 
-            // Airport Start Icon Marker on map
+            // Start Location Marker (Pulsing blue GPS dot or Airport icon)
+            const isGpsOrigin = originLabel.includes('Location') || originLabel.includes('Live');
             const startIcon = L.divIcon({
                 className: 'route-start-marker',
-                html: `<div style="background:#2563eb;color:#ffffff;border-radius:9999px;padding:3px 9px;font-size:10px;font-weight:900;border:2px solid #ffffff;box-shadow:0 4px 14px rgba(0,0,0,0.35);white-space:nowrap;display:flex;align-items:center;gap:4px;">
-                    <span>✈️</span><span>Airport (BIA)</span>
+                html: isGpsOrigin ? `
+                    <div style="position:relative;display:flex;align-items:center;gap:6px;">
+                        <span style="position:relative;display:flex;width:16px;height:16px;">
+                            <span style="animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;position:absolute;display:inline-flex;height:100%;width:100%;border-radius:9999px;background-color:#60a5fa;opacity:0.75;"></span>
+                            <span style="position:relative;display:inline-flex;border-radius:9999px;height:16px;width:16px;background-color:#2563eb;border:2px solid #ffffff;box-shadow:0 3px 10px rgba(0,0,0,0.4);"></span>
+                        </span>
+                        <span style="background:rgba(15,23,42,0.92);color:#ffffff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:9999px;box-shadow:0 4px 10px rgba(0,0,0,0.3);white-space:nowrap;border:1px solid rgba(255,255,255,0.7);">
+                            📍 You Are Here
+                        </span>
+                    </div>` : `
+                    <div style="background:#2563eb;color:#ffffff;border-radius:9999px;padding:3px 9px;font-size:10px;font-weight:900;border:2px solid #ffffff;box-shadow:0 4px 14px rgba(0,0,0,0.35);white-space:nowrap;display:flex;align-items:center;gap:4px;">
+                        <span>✈️</span><span>Airport (BIA)</span>
+                    </div>`,
+                iconSize: [0, 0],
+                iconAnchor: isGpsOrigin ? [8, 8] : [45, 15]
+            });
+            activeRouteStartMarker = L.marker(originCoords, { icon: startIcon }).addTo(leafletMapInstance);
+
+            // Target Pin Marker on map
+            const cleanDestShort = destName.replace(/^[^\w\s]+\s*/, '');
+            const destIcon = L.divIcon({
+                className: 'route-dest-marker',
+                html: `<div style="background:#dc2626;color:#ffffff;border-radius:9999px;padding:3px 9px;font-size:10px;font-weight:900;border:2px solid #ffffff;box-shadow:0 4px 14px rgba(220,38,38,0.4);white-space:nowrap;display:flex;align-items:center;gap:4px;">
+                    <span>🎯</span><span>${cleanDestShort}</span>
                 </div>`,
                 iconSize: [0, 0],
-                iconAnchor: [45, 15]
+                iconAnchor: [35, 15]
             });
-            activeRouteStartMarker = L.marker(AIRPORT_START_COORDS, { icon: startIcon }).addTo(leafletMapInstance);
+            activeRouteDestMarker = L.marker(destCoords, { icon: destIcon }).addTo(leafletMapInstance);
 
-            try {
-                // Query OSRM driving route from Colombo Airport to destination
-                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${AIRPORT_START_COORDS[1]},${AIRPORT_START_COORDS[0]};${destCoords[1]},${destCoords[0]}?overview=full&geometries=geojson`;
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 6000);
+            // Fetch Real Driving Road Route (Primary: project-osrm, Backup: openstreetmap.de)
+            let roadData = null;
+            const endpoints = [
+                `https://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${destCoords[1]},${destCoords[0]}?overview=full&geometries=geojson`,
+                `https://routing.openstreetmap.de/routed-car/route/v1/driving/${originCoords[1]},${originCoords[0]};${destCoords[1]},${destCoords[0]}?overview=full&geometries=geojson`
+            ];
 
-                const res = await fetch(osrmUrl, { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (!res.ok) throw new Error('OSRM error');
-                const data = await res.json();
-
-                if (data && data.routes && data.routes.length > 0) {
-                    const route = data.routes[0];
-                    const latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
-
-                    const distanceKm = Math.round(route.distance / 1000);
-                    const hours = Math.floor(route.duration / 3600);
-                    const mins = Math.round((route.duration % 3600) / 60);
-                    const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
-
-                    if (distEl) distEl.textContent = distanceKm + ' km';
-                    if (durEl) durEl.textContent = durationStr;
-
-                    // Draw glowing orange route polyline on map
-                    activeRoutePolyline = L.polyline(latLngs, {
-                        color: '#FF5B00',
-                        weight: 4.5,
-                        opacity: 0.9,
-                        dashArray: '8, 6',
-                        lineCap: 'round',
-                        lineJoin: 'round'
-                    }).addTo(leafletMapInstance);
-
-                    leafletMapInstance.fitBounds(activeRoutePolyline.getBounds(), { padding: [50, 50] });
-                    return;
+            for (let i = 0; i < endpoints.length; i++) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 6500);
+                    const res = await fetch(endpoints[i], { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.routes && data.routes.length > 0) {
+                            roadData = data.routes[0];
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Router endpoint ' + i + ' failed:', e);
                 }
-            } catch (err) {
-                console.warn('OSRM routing fetch failed or timed out, using geodesic estimation:', err);
             }
 
-            // Fallback estimation if OSRM is slow or offline
-            const dLat = (destCoords[0] - AIRPORT_START_COORDS[0]) * 111;
-            const dLng = (destCoords[1] - AIRPORT_START_COORDS[1]) * 111 * Math.cos(AIRPORT_START_COORDS[0] * Math.PI / 180);
+            if (roadData) {
+                const latLngs = roadData.geometry.coordinates.map(c => [c[1], c[0]]);
+                const distanceKm = Math.round(roadData.distance / 1000);
+                const hours = Math.floor(roadData.duration / 3600);
+                const mins = Math.round((roadData.duration % 3600) / 60);
+                const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
+
+                if (distEl) distEl.textContent = distanceKm + ' km';
+                if (durEl) durEl.textContent = durationStr;
+
+                // Google Maps Highway Style: Dark blue casing + vibrant blue highway line
+                activeRouteCasing = L.polyline(latLngs, {
+                    color: '#0d47a1',
+                    weight: 7,
+                    opacity: 0.9,
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(leafletMapInstance);
+
+                activeRoutePolyline = L.polyline(latLngs, {
+                    color: '#1a73e8',
+                    weight: 4.5,
+                    opacity: 1.0,
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(leafletMapInstance);
+
+                leafletMapInstance.fitBounds(activeRoutePolyline.getBounds(), { padding: [55, 55] });
+                return;
+            }
+
+            // Fallback estimation
+            const dLat = (destCoords[0] - originCoords[0]) * 111;
+            const dLng = (destCoords[1] - originCoords[1]) * 111 * Math.cos(originCoords[0] * Math.PI / 180);
             const straightKm = Math.sqrt(dLat * dLat + dLng * dLng);
-            const roadKm = Math.round(straightKm * 1.38); // Standard Sri Lanka terrain road multiplier
-            const estHours = (roadKm / 48).toFixed(1);
+            const roadKm = Math.round(straightKm * 1.38);
+            const estHours = (roadKm / 46).toFixed(1);
 
             if (distEl) distEl.textContent = `~${roadKm} km`;
             if (durEl) durEl.textContent = `~${estHours} hrs`;
 
-            // Draw direct polyline
-            activeRoutePolyline = L.polyline([AIRPORT_START_COORDS, destCoords], {
-                color: '#FF5B00',
-                weight: 4,
-                opacity: 0.85,
+            activeRoutePolyline = L.polyline([originCoords, destCoords], {
+                color: '#1a73e8',
+                weight: 5,
+                opacity: 0.9,
                 dashArray: '8, 8'
             }).addTo(leafletMapInstance);
 
@@ -1642,6 +1783,10 @@
         }
 
         function clearActiveRoute() {
+            if (activeRouteCasing && leafletMapInstance) {
+                leafletMapInstance.removeLayer(activeRouteCasing);
+                activeRouteCasing = null;
+            }
             if (activeRoutePolyline && leafletMapInstance) {
                 leafletMapInstance.removeLayer(activeRoutePolyline);
                 activeRoutePolyline = null;
@@ -1649,6 +1794,10 @@
             if (activeRouteStartMarker && leafletMapInstance) {
                 leafletMapInstance.removeLayer(activeRouteStartMarker);
                 activeRouteStartMarker = null;
+            }
+            if (activeRouteDestMarker && leafletMapInstance) {
+                leafletMapInstance.removeLayer(activeRouteDestMarker);
+                activeRouteDestMarker = null;
             }
             const card = document.getElementById('mapRouteCard');
             if (card) card.style.display = 'none';
