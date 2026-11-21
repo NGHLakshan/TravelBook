@@ -540,50 +540,54 @@
                     </div>
                 </div>
 
-                <!-- Destination Detail Sidebar (Hidden by default; only opens when a destination or pin is clicked) -->
-                <div id="destSidebar" class="w-full md:w-80 lg:w-[380px] bg-white border-t md:border-t-0 md:border-l border-gray-100 flex flex-col justify-between overflow-hidden flex-shrink-0" style="display: none;">
-                    <!-- Top Zone Info Header -->
-                    <div class="p-4 border-b border-gray-100 flex-shrink-0">
-                        <div class="h-32 sm:h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2.5 relative shadow-sm">
+                <!-- Destination Detail Sidebar (Sleek, Spacious & Fully Responsive) -->
+                <div id="destSidebar" class="w-full md:w-80 lg:w-[380px] bg-white border-t md:border-t-0 md:border-l border-gray-100 flex flex-col h-[460px] md:h-[600px] overflow-hidden flex-shrink-0" style="display: none;">
+                    <!-- Top Zone Info Header (Compact & Crisp) -->
+                    <div class="p-3 sm:p-3.5 border-b border-gray-100 flex-shrink-0 bg-white">
+                        <div class="h-24 sm:h-28 rounded-2xl overflow-hidden bg-gray-100 mb-2 relative shadow-sm">
                             <img id="destImg" src="https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80" alt="" class="w-full h-full object-cover">
-                            <span id="destBadge" class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#FF5B00] text-white shadow">
+                            <span id="destBadge" class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-[#FF5B00] text-white shadow">
                                 ⭐ VERIFIED DIRECT HUB
                             </span>
-                            <button type="button" onclick="focusDestination('all')" title="Close details and expand full map" class="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer z-10 shadow">
+                            <button type="button" onclick="focusDestination('all')" title="Close details and expand full map" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer z-10 shadow">
                                 <i class="fa-solid fa-xmark text-xs"></i>
                             </button>
                         </div>
-                        <h4 id="destTitle" class="text-base sm:text-lg font-black text-gray-900 leading-snug">🏔️ Ella & Nuwara Eliya Zone</h4>
-                        <p id="destDesc" class="text-xs text-gray-500 mt-1 leading-relaxed">
-                            Our primary flagship hub! Mist-covered mountain summits, direct verified guides, waterfalls, and tea estate trails.
+
+                        <h4 id="destTitle" class="text-sm sm:text-base font-black text-gray-900 leading-tight truncate">🏔️ Ella & Nuwara Eliya Zone</h4>
+                        <p id="destDesc" class="text-[11px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">
+                            Our primary flagship hub! Mist-covered summits, direct verified guides, waterfalls, and tea estate trails.
                         </p>
 
-                        <!-- Live Real-Time Weather Widget -->
-                        <div id="destWeatherContainer" class="mt-2.5 flex items-center gap-2.5 p-2 rounded-xl bg-gradient-to-r from-sky-50 via-blue-50/70 to-orange-50/40 border border-sky-100 text-sky-950 text-xs shadow-sm">
-                            <div id="destWeatherIcon" class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-lg flex-shrink-0">⛅</div>
-                            <div class="flex-grow min-w-0">
-                                <div class="flex items-center justify-between">
-                                    <span id="destWeatherTemp" class="font-extrabold text-xs text-gray-900">Checking weather...</span>
-                                    <span id="destWeatherCondition" class="text-[9px] font-extrabold text-sky-700 bg-sky-100/80 px-1.5 py-0.5 rounded-md">LIVE</span>
+                        <!-- Live Real-Time Weather Widget (Sleek Compact Bar) -->
+                        <div id="destWeatherContainer" class="mt-2 flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-sky-50 via-blue-50/70 to-orange-50/30 border border-sky-100 text-xs shadow-2xs">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span id="destWeatherIcon" class="text-base flex-shrink-0">⛅</span>
+                                <div class="truncate">
+                                    <div class="flex items-center gap-1.5">
+                                        <span id="destWeatherTemp" class="font-extrabold text-xs text-gray-900">Checking...</span>
+                                        <span id="destWeatherCondition" class="text-[9px] font-extrabold text-sky-700 bg-sky-100/90 px-1 py-0.2 rounded uppercase">LIVE</span>
+                                    </div>
+                                    <p id="destWeatherDetail" class="text-[9px] text-gray-500 truncate">Fetching live temperature...</p>
                                 </div>
-                                <p id="destWeatherDetail" class="text-[10px] text-gray-500 truncate mt-0.5">Fetching live temperature & wind...</p>
                             </div>
+                            <span class="text-[9px] font-bold text-sky-600 bg-white/80 px-1.5 py-0.5 rounded-md shadow-2xs flex-shrink-0">Forecast</span>
                         </div>
 
                         <!-- Search Filter for Spots -->
-                        <div class="mt-3 relative">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <div class="mt-2 relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]"></i>
                             <input type="text" 
                                    id="spotSearchInput" 
                                    oninput="filterTouristSpots(this.value)" 
-                                   placeholder="Search tourist spots in Sri Lanka..." 
-                                   class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:border-[#FF5B00] bg-gray-50/50">
+                                   placeholder="Filter tourist attractions..." 
+                                   class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:border-[#FF5B00] bg-gray-50/60">
                         </div>
                     </div>
 
-                    <!-- Scrollable Spots List (All 77 Spots) -->
-                    <div class="flex-grow overflow-y-auto p-4 space-y-2 max-h-[220px] md:max-h-[240px]">
-                        <div class="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-1">
+                    <!-- Scrollable Spots List (Full vertical space, NO height squishing!) -->
+                    <div class="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-[140px] bg-gray-50/40">
+                        <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-gray-400 mb-1 px-1">
                             <span id="spotsCountLabel">Attractions to Explore:</span>
                             <span class="text-orange-600 font-black" id="spotsCountBadge">9 Places</span>
                         </div>
@@ -592,30 +596,32 @@
                         </div>
                     </div>
 
-                    <!-- Bottom Action Buttons -->
-                    <div class="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2 flex-shrink-0">
-                        <!-- Directions Action Button -->
-                        <button id="destDirectionsBtn" 
-                                type="button" 
-                                onclick="getDirectionsForCurrentZone()" 
-                                class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-route text-xs"></i>
-                            <span>Get Driving Route (Directions)</span>
-                        </button>
+                    <!-- Bottom Action Buttons (Streamlined 2-Row Layout: Saves 100px vertical space!) -->
+                    <div class="p-3 border-t border-gray-100 bg-white space-y-1.5 flex-shrink-0">
                         <button id="destActionBtn" 
                                 type="button" 
                                 onclick="viewRegionTours('ella_nuwara_eliya')" 
-                                class="w-full py-2.5 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-bold text-xs sm:text-sm transition shadow-md shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer">
+                                class="w-full py-2 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
                             <span>Explore Experiences in this Zone</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
-                        <a id="destWhatsappBtn" 
-                           href="https://wa.me/94770000000?text=Hello%20CeylonGo%2C%20I%20would%20like%20to%20plan%20a%20tour%20or%20private%20ride%20in%20Ella%20%26%20Nuwara%20Eliya" 
-                           target="_blank" 
-                           class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer text-center">
-                            <i class="fa-brands fa-whatsapp text-sm"></i>
-                            <span>Inquire / Custom Route via WhatsApp</span>
-                        </a>
+
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button id="destDirectionsBtn" 
+                                    type="button" 
+                                    onclick="getDirectionsForCurrentZone()" 
+                                    class="py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer truncate">
+                                <i class="fa-solid fa-route text-xs text-blue-600"></i>
+                                <span>Directions</span>
+                            </button>
+                            <a id="destWhatsappBtn" 
+                               href="https://wa.me/94770000000" 
+                               target="_blank" 
+                               class="py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center truncate">
+                                <i class="fa-brands fa-whatsapp text-sm text-emerald-600"></i>
+                                <span>Inquire Cab</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
