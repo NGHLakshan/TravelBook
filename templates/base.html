@@ -558,87 +558,100 @@
                     </div>
                 </div>
 
-                <!-- Destination Detail Sidebar (Sleek, Spacious & Fully Responsive) -->
-                <div id="destSidebar" class="w-full md:w-80 lg:w-[380px] bg-white border-t md:border-t-0 md:border-l border-gray-100 flex flex-col h-[460px] md:h-[600px] overflow-hidden flex-shrink-0" style="display: none;">
-                    <!-- Top Zone Info Header (Compact & Crisp) -->
-                    <div class="p-3 sm:p-3.5 border-b border-gray-100 flex-shrink-0 bg-white">
-                        <div class="h-24 sm:h-28 rounded-2xl overflow-hidden bg-gray-100 mb-2 relative shadow-sm">
-                            <img id="destImg" src="https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80" alt="" class="w-full h-full object-cover">
-                            <span id="destBadge" class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-[#FF5B00] text-white shadow">
-                                ⭐ VERIFIED DIRECT HUB
-                            </span>
-                            <button type="button" onclick="focusDestination('all')" title="Close details and expand full map" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer z-10 shadow">
-                                <i class="fa-solid fa-xmark text-xs"></i>
-                            </button>
-                        </div>
+                <!-- Destination Detail Sidebar (Focused Single Spot Showcase) -->
+                <div id="destSidebar" class="w-full md:w-80 lg:w-[380px] bg-white border-t md:border-t-0 md:border-l border-gray-100 flex flex-col h-[460px] md:h-[600px] overflow-y-auto flex-shrink-0 shadow-lg" style="display: none;">
+                    <!-- Destination Hero Photo & Badges -->
+                    <div class="relative h-36 sm:h-44 bg-gray-900 flex-shrink-0 overflow-hidden group">
+                        <img id="destImg" src="https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80" alt="" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
 
-                        <h4 id="destTitle" class="text-sm sm:text-base font-black text-gray-900 leading-tight truncate">🏔️ Ella & Nuwara Eliya Zone</h4>
-                        <p id="destDesc" class="text-[11px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">
-                            Our primary flagship hub! Mist-covered summits, direct verified guides, waterfalls, and tea estate trails.
-                        </p>
+                        <!-- Category Badge -->
+                        <span id="destBadge" class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-[#FF5B00] text-white shadow-md">
+                            ⭐ FEATURED DESTINATION
+                        </span>
 
-                        <!-- Live Real-Time Weather Widget (Sleek Compact Bar) -->
-                        <div id="destWeatherContainer" class="mt-2 flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-sky-50 via-blue-50/70 to-orange-50/30 border border-sky-100 text-xs shadow-2xs">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span id="destWeatherIcon" class="text-base flex-shrink-0">⛅</span>
-                                <div class="truncate">
-                                    <div class="flex items-center gap-1.5">
-                                        <span id="destWeatherTemp" class="font-extrabold text-xs text-gray-900">Checking...</span>
-                                        <span id="destWeatherCondition" class="text-[9px] font-extrabold text-sky-700 bg-sky-100/90 px-1 py-0.2 rounded uppercase">LIVE</span>
-                                    </div>
-                                    <p id="destWeatherDetail" class="text-[9px] text-gray-500 truncate">Fetching live temperature...</p>
-                                </div>
-                            </div>
-                            <span class="text-[9px] font-bold text-sky-600 bg-white/80 px-1.5 py-0.5 rounded-md shadow-2xs flex-shrink-0">Forecast</span>
-                        </div>
-
-                        <!-- Search Filter for Spots -->
-                        <div class="mt-2 relative">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]"></i>
-                            <input type="text" 
-                                   id="spotSearchInput" 
-                                   oninput="filterTouristSpots(this.value)" 
-                                   placeholder="Filter tourist attractions..." 
-                                   class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:border-[#FF5B00] bg-gray-50/60">
-                        </div>
-                    </div>
-
-                    <!-- Scrollable Spots List (Full vertical space, NO height squishing!) -->
-                    <div class="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-[140px] bg-gray-50/40">
-                        <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-gray-400 mb-1 px-1">
-                            <span id="spotsCountLabel">Attractions to Explore:</span>
-                            <span class="text-orange-600 font-black" id="spotsCountBadge">9 Places</span>
-                        </div>
-                        <div id="destSpotsList" class="space-y-1.5">
-                            <!-- Populated dynamically via JS -->
-                        </div>
-                    </div>
-
-                    <!-- Bottom Action Buttons (Streamlined 2-Row Layout: Saves 100px vertical space!) -->
-                    <div class="p-3 border-t border-gray-100 bg-white space-y-1.5 flex-shrink-0">
-                        <button id="destActionBtn" 
-                                type="button" 
-                                onclick="viewRegionTours('ella_nuwara_eliya')" 
-                                class="w-full py-2 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-                            <span>Explore Experiences in this Zone</span>
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        <!-- Close Button -->
+                        <button type="button" onclick="focusDestination('all')" title="Close details and expand full map" class="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer z-10 shadow-md">
+                            <i class="fa-solid fa-xmark text-xs"></i>
                         </button>
 
-                        <div class="grid grid-cols-2 gap-1.5">
+                        <!-- Overlay Title on Image Bottom -->
+                        <div class="absolute bottom-2.5 left-3 right-3 text-white">
+                            <p id="destSubtitle" class="text-[10px] font-extrabold uppercase tracking-wider text-orange-300 drop-shadow-sm">Cultural Triangle</p>
+                            <h4 id="destTitle" class="text-sm sm:text-base font-black leading-tight drop-shadow-sm text-white truncate">🦁 Sigiriya Rock Fortress</h4>
+                        </div>
+                    </div>
+
+                    <!-- Body Information -->
+                    <div class="p-3 sm:p-3.5 space-y-2.5 flex-1 flex flex-col justify-between bg-white">
+                        <div class="space-y-2.5">
+                            <!-- Spot Description -->
+                            <p id="destDesc" class="text-xs text-gray-600 leading-relaxed">
+                                5th-century UNESCO sky palace carved atop a 200m sheer granite monolith. Marvel at ancient water gardens, mirror walls, and world-famous frescoes.
+                            </p>
+
+                            <!-- Live Weather Widget (Open-Meteo) -->
+                            <div id="destWeatherContainer" class="flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-sky-50 via-blue-50/70 to-orange-50/30 border border-sky-100 text-xs shadow-2xs">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span id="destWeatherIcon" class="text-lg flex-shrink-0">⛅</span>
+                                    <div class="truncate">
+                                        <div class="flex items-center gap-1.5">
+                                            <span id="destWeatherTemp" class="font-extrabold text-xs text-gray-900">Checking...</span>
+                                            <span id="destWeatherCondition" class="text-[9px] font-extrabold text-sky-700 bg-sky-100/90 px-1 py-0.2 rounded uppercase">LIVE</span>
+                                        </div>
+                                        <p id="destWeatherDetail" class="text-[9px] text-gray-500 truncate">Fetching live weather...</p>
+                                    </div>
+                                </div>
+                                <span class="text-[9px] font-bold text-sky-600 bg-white/80 px-1.5 py-0.5 rounded-md shadow-2xs flex-shrink-0">Open-Meteo</span>
+                            </div>
+
+                            <!-- Road Distance from User Live GPS Card -->
+                            <div id="destRoadDistanceCard" class="p-2.5 rounded-xl bg-blue-50/90 border border-blue-100 text-xs flex items-center justify-between">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-base flex-shrink-0">🛣️</span>
+                                    <div class="min-w-0 truncate">
+                                        <span id="destRoadKmText" class="font-black text-blue-950 text-xs truncate block">Distance: Calculating...</span>
+                                        <p id="destRoadTimeText" class="text-[9px] text-blue-700 font-semibold truncate">from your live location</p>
+                                    </div>
+                                </div>
+                                <span class="text-[9px] font-extrabold text-blue-700 bg-blue-100/80 px-1.5 py-0.5 rounded-md flex-shrink-0">Real Roads</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="space-y-2 pt-2 border-t border-gray-100">
+                            <!-- 1. Real Road Driving Directions (Google Maps style) -->
                             <button id="destDirectionsBtn" 
                                     type="button" 
-                                    onclick="getDirectionsForCurrentZone()" 
-                                    class="py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer truncate">
-                                <i class="fa-solid fa-route text-xs text-blue-600"></i>
-                                <span>Directions</span>
+                                    onclick="getDirectionsForCurrentSpot()" 
+                                    class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm transition shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-route text-sm"></i>
+                                <span>Get Driving Route (Directions)</span>
                             </button>
+
+                            <!-- 2. Explore Tour Experiences -->
+                            <button id="destActionBtn" 
+                                    type="button" 
+                                    onclick="viewSpotTours()" 
+                                    class="w-full py-2.5 px-3 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-compass text-sm"></i>
+                                <span id="destActionBtnText">Explore Tours & Activities</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+
+                            <!-- 3. Inquire / Book Chauffeur via WhatsApp -->
                             <a id="destWhatsappBtn" 
                                href="https://wa.me/94770000000" 
                                target="_blank" 
-                               class="py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center truncate">
+                               class="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer text-center">
                                 <i class="fa-brands fa-whatsapp text-sm text-emerald-600"></i>
-                                <span>Inquire Cab</span>
+                                <span id="destWhatsappBtnText">Inquire Private Cab to this Place</span>
                             </a>
+
+                            <!-- Helper Hint -->
+                            <p class="text-[10px] text-gray-400 text-center pt-0.5">
+                                <i class="fa-solid fa-map-pin text-[9px] mr-1 text-orange-500"></i> Click any pin on the map to view its details
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -1143,16 +1156,89 @@
             });
         }
 
+        // CURATED HIGH-RESOLUTION SPOT PHOTOS
+        const SPOT_IMAGE_LOOKUP = {
+            "Sigiriya Rock Fortress": "https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80",
+            "Sigiriya Museum": "https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80",
+            "Pidurangala Rock": "https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?auto=format&fit=crop&w=800&q=80",
+            "Dambulla Golden Cave Temple": "https://images.unsplash.com/photo-1620619767323-b95a89183081?auto=format&fit=crop&w=800&q=80",
+            "Polonnaruwa Sacred City": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
+            "Gal Viharaya": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
+            "Ruwanwelisaya": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Jaya Sri Maha Bodhi": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Mihintale Sacred Peak": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Minneriya National Park": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+            "Kaudulla National Park": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+            "Yapahuwa Rock Fortress": "https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80",
+            "Nine Arches Bridge": "https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=800&q=80",
+            "Ella Rock": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Ravana Falls": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+            "Little Adam's Peak": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Pedro Tea Estate": "https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80",
+            "Gregory Lake": "https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=800&q=80",
+            "Horton Plains National Park": "https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=800&q=80",
+            "World’s End": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Kandy Temple of the Tooth": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
+            "Kandy Lake": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
+            "Royal Botanic Gardens (Peradeniya)": "https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=800&q=80",
+            "Knuckles Mountain Range": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Adam’s Peak (Sri Pada)": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
+            "Galle Dutch Fort": "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80",
+            "Galle Fort Lighthouse": "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80",
+            "Unawatuna Beach": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+            "Mirissa Beach": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+            "Coconut Tree Hill": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+            "Yala National Park Safari": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+            "Bundala National Park": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+            "Hiriketiya Beach": "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80",
+            "Arugam Bay Beaches": "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80",
+            "Pigeon Island": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+            "Nilaveli Beach": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+            "Fort Frederick, Trincomalee": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+            "Galle Face Green": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
+            "Gangaramaya Temple": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
+            "Bentota Beach": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+            "Pinnawala Elephant Orphanage": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+            "Kosgoda Sea Turtle Hatchery": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+            "Sinharaja Forest Reserve": "https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=800&q=80",
+            "Udawalawe National Park": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+            "Wilpattu National Park": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+            "Jaffna Dutch Fort": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+            "Nallur Kandaswamy Kovil": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+            "Casuarina Beach": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+            "Delft Island (Neduntheevu)": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80"
+        };
+
+        // CURATED DESCRIPTIONS FOR AUTHENTIC SHOWCASE
+        const SPOT_DESC_LOOKUP = {
+            "Sigiriya Rock Fortress": "5th-century UNESCO sky palace carved atop a 200m sheer granite monolith. Marvel at ancient water gardens, mirror walls, and world-famous frescoes.",
+            "Pidurangala Rock": "Famous sunrise and sunset hike offering the ultimate 360-degree panoramic view of the Sigiriya rock fortress standing majestically against the jungle horizon.",
+            "Dambulla Golden Cave Temple": "A sacred 2,000-year-old cliffside cave monastery filled with 150+ gilded Buddha statues and ancient Buddhist rock murals.",
+            "Nine Arches Bridge": "Iconic colonial-era viaduct bridge nestled in dense mountain jungle. Catch the blue train crossing over the emerald tea valleys.",
+            "Ella Rock": "Scenic mountain trek taking you through tea plantations, eucalyptus forests, and clifftop ridges overlooking Ella Gap.",
+            "Little Adam's Peak": "Easy, family-friendly hike with sweeping sunset views across the central highlands and Ella mountain pass.",
+            "Ravana Falls": "One of Sri Lanka's widest tiered waterfalls, cascading dramatically along the roadside cliffs in Ella.",
+            "Kandy Temple of the Tooth": "Sri Lanka's most sacred Buddhist temple housing the sacred tooth relic of the Buddha in the last royal mountain kingdom.",
+            "Galle Dutch Fort": "17th-century UNESCO living fortress with cobblestone lanes, ocean ramparts, seaside lighthouse, and artisan boutique cafes.",
+            "Mirissa Beach": "Golden palm-fringed bay famous for whale watching expeditions, coconut tree hill sunsets, and lively beachfront seafood dining.",
+            "Yala National Park Safari": "World-famous wildlife park with the highest leopard concentration on Earth, alongside sloth bears, elephants, and crocodiles.",
+            "Arugam Bay Beaches": "World-renowned surfing paradise and relaxed coastal enclave with golden beaches, point breaks, and lagoon safari tours.",
+            "Sinharaja Forest Reserve": "Last viable virgin tropical rainforest in Sri Lanka, home to over 95% of the island's endemic birds, rare orchids, and waterfalls.",
+            "Udawalawe National Park": "Vast open savannah grasslands guaranteed to showcase large herds of wild Asian elephants and the Elephant Transit Home.",
+            "Jaffna Dutch Fort": "Historic pentagonal stone fortress overlooking the Jaffna lagoon, showcasing 400 years of Portuguese, Dutch, and British history."
+        };
+
+        let currentSelectedSpot = null;
+        let currentSelectedRegion = null;
+
         function zoomToLandmark(lm) {
             if (!leafletMapInstance) return;
             isZoomingToTarget = true;
             activeZoneKey = lm.zone;
             updateZoomPillsUI(lm.zone);
 
-            // Open the sidebar with region information
             const region = SRI_LANKA_REGIONS_DATA[lm.zone];
             if (region) {
-                updateDestSidebar(region);
                 renderZoneSpotMarkers(region);
 
                 if (activeZoneCircle && leafletMapInstance) {
@@ -1169,10 +1255,25 @@
                     fillOpacity: 0.08,
                     radius: 20000
                 }).addTo(leafletMapInstance);
+
+                // Match to specific spot or create one for landmark
+                let matchedSpot = null;
+                if (region.spots) {
+                    matchedSpot = region.spots.find(s => s.name.toLowerCase().includes(lm.short.toLowerCase()) || lm.name.toLowerCase().includes(s.name.toLowerCase()));
+                }
+                if (!matchedSpot) {
+                    matchedSpot = {
+                        name: lm.short || lm.name.replace(/^[^\s]+\s*/, ''),
+                        type: region.title.replace(/^[^\s]+\s*/, ''),
+                        coords: lm.coords,
+                        icon: lm.name.split(' ')[0] || '📍'
+                    };
+                }
+                showSpotDetail(matchedSpot, region);
             }
 
-            // Fly directly and smoothly into the clicked landmark!
-            leafletMapInstance.flyTo(lm.coords, 10.5, { duration: 1.2, easeLinearity: 0.25 });
+            // Fly directly and smoothly into the clicked landmark
+            leafletMapInstance.flyTo(lm.coords, 11, { duration: 1.2, easeLinearity: 0.25 });
 
             setTimeout(function() {
                 isZoomingToTarget = false;
@@ -1191,7 +1292,7 @@
             clearSpotMarkers();
             if (!region || !region.spots) return;
 
-            region.spots.forEach(function(spot, index) {
+            region.spots.forEach(function(spot) {
                 const html = `
                     <div class="game-badge-wrapper" title="${spot.name} (${spot.type})">
                         <div class="game-spot-pin">
@@ -1209,9 +1310,12 @@
                 });
 
                 const marker = L.marker(spot.coords, { icon: icon }).addTo(leafletMapInstance);
-                marker.on('click', function() {
-                    leafletMapInstance.flyTo(spot.coords, 14, { duration: 1.2, easeLinearity: 0.25 });
-                    highlightSpotCard(spot.name);
+                marker.on('click', function(e) {
+                    if (e && e.originalEvent) {
+                        L.DomEvent.stopPropagation(e);
+                    }
+                    leafletMapInstance.flyTo(spot.coords, 13.5, { duration: 1.2, easeLinearity: 0.25 });
+                    showSpotDetail(spot, region);
                 });
                 spotMarkers.push(marker);
             });
@@ -1248,11 +1352,8 @@
             isZoomingToTarget = true;
             activeZoneKey = key;
 
-            // Render specific spots & sidebar
             renderZoneSpotMarkers(region);
-            updateDestSidebar(region);
 
-            // Glowing Game Zone perimeter circle
             const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
             activeZoneCircle = L.circle(region.coords, {
                 color: zoneColor,
@@ -1264,6 +1365,15 @@
                 radius: 28000
             }).addTo(leafletMapInstance);
 
+            // Select primary highlight spot in this zone
+            const firstSpot = (region.spots && region.spots[0]) ? region.spots[0] : {
+                name: region.title.replace(/^[^\s]+\s*/, ''),
+                type: region.badge,
+                coords: region.coords,
+                icon: region.title.split(' ')[0] || '📍'
+            };
+            showSpotDetail(firstSpot, region);
+
             const targetZoom = Math.max(region.zoom || 10, 10);
             leafletMapInstance.flyTo(region.coords, targetZoom, { duration: 1.2, easeLinearity: 0.25 });
 
@@ -1274,7 +1384,7 @@
         }
 
         function showAllSriLankaOverview() {
-            // Hide sidebar when in All Island overview mode so map gets 100% full width
+            // Hide sidebar in overview mode so map gets 100% full width
             const sidebar = document.getElementById('destSidebar');
             if (sidebar) sidebar.style.display = 'none';
 
@@ -1284,6 +1394,8 @@
             clearActiveRoute();
             currentActiveZoneCoords = null;
             currentActiveZoneTitle = '';
+            currentSelectedSpot = null;
+            currentSelectedRegion = null;
 
             if (leafletMapInstance) {
                 setTimeout(function() {
@@ -1291,41 +1403,16 @@
                     leafletMapInstance.fitBounds(SRI_LANKA_BOUNDS, { padding: [15, 15] });
                 }, 60);
             }
-
-            document.getElementById('destImg').src = 'https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=800&q=80';
-            const badgeEl = document.getElementById('destBadge');
-            badgeEl.textContent = '🗺️ COMPLETE ISLAND GUIDE';
-            badgeEl.className = 'absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow bg-gray-900';
-
-            let allSpots = [];
-            Object.keys(SRI_LANKA_REGIONS_DATA).forEach(function(rKey) {
-                allSpots = allSpots.concat(SRI_LANKA_REGIONS_DATA[rKey].spots);
-            });
-
-            document.getElementById('destTitle').textContent = 'Sri Lanka 8 Adventure Zones (' + allSpots.length + ' Attractions)';
-            document.getElementById('destDesc').textContent = 'Explore our verified local network across Jaffna, Ella, Nuwara Eliya, Yala Safari, Colombo VIP Cabs, and every scenic corner of Sri Lanka.';
-
-            const spotsListEl = document.getElementById('destSpotsList');
-            spotsListEl.innerHTML = '';
-
-            document.getElementById('spotsCountLabel').textContent = 'Total Sights in Sri Lanka:';
-            document.getElementById('spotsCountBadge').textContent = allSpots.length + ' Places';
-
-            renderSpotsInSidebar(allSpots);
-
-            const actionBtn = document.getElementById('destActionBtn');
-            actionBtn.innerHTML = `<span>Explore All Experiences ➔</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
-            actionBtn.onclick = function() {
-                closeMapModal();
-                window.location.href = '/#packages-section';
-            };
-
-            const waBtn = document.getElementById('destWhatsappBtn');
-            waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent('Hello CeylonGo, I would like to plan a complete Sri Lanka itinerary!');
         }
 
-        function updateDestSidebar(region) {
-            // Reveal sidebar when a destination or pin is clicked
+        // SHOW DEDICATED SPOT DETAIL (NO CLUTTERED 13-ITEM LIST)
+        function showSpotDetail(spot, region) {
+            if (!spot) return;
+            currentSelectedSpot = spot;
+            currentSelectedRegion = region;
+            currentTargetCoords = spot.coords;
+            currentTargetName = spot.name;
+
             const sidebar = document.getElementById('destSidebar');
             if (sidebar) {
                 sidebar.style.display = 'flex';
@@ -1336,120 +1423,107 @@
                 }
             }
 
-            currentActiveZoneCoords = region.coords;
-            currentActiveZoneTitle = region.title;
+            // Image
+            const imgEl = document.getElementById('destImg');
+            const spotImg = SPOT_IMAGE_LOOKUP[spot.name] || (region ? region.img : 'https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80');
+            if (imgEl) imgEl.src = spotImg;
 
-            // Fetch and display live weather for this zone
-            fetchZoneWeather(region.coords, region.title);
-
-            document.getElementById('destImg').src = region.img;
-
+            // Badges & Subtitle
             const badgeEl = document.getElementById('destBadge');
-            badgeEl.textContent = region.badge;
-            badgeEl.className = 'absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow ' + (region.badgeColor || 'bg-[#FF5B00]');
+            if (badgeEl) {
+                const badgeText = spot.type ? spot.type.toUpperCase() : (region ? region.badge : 'FEATURED DESTINATION');
+                badgeEl.textContent = badgeText;
+                badgeEl.className = 'absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider text-white shadow-md ' + (region ? (region.badgeColor || 'bg-[#FF5B00]') : 'bg-[#FF5B00]');
+            }
 
-            document.getElementById('destTitle').textContent = region.title;
-            document.getElementById('destDesc').textContent = region.desc;
+            const subtitleEl = document.getElementById('destSubtitle');
+            if (subtitleEl) {
+                subtitleEl.textContent = region ? region.title.replace(/^[^\s]+\s*/, '') : 'Sri Lanka Destination';
+            }
 
-            document.getElementById('spotsCountLabel').textContent = 'Attractions in this Zone:';
-            document.getElementById('spotsCountBadge').textContent = (region.spots ? region.spots.length : 0) + ' Places';
+            // Title
+            const titleEl = document.getElementById('destTitle');
+            if (titleEl) {
+                titleEl.textContent = (spot.icon ? spot.icon + ' ' : '') + spot.name;
+            }
 
-            renderSpotsInSidebar(region.spots || []);
+            // Description
+            const descEl = document.getElementById('destDesc');
+            if (descEl) {
+                const descText = SPOT_DESC_LOOKUP[spot.name] || spot.desc || (region ? region.desc : 'Explore this premier destination with verified local drivers and guides.');
+                descEl.textContent = descText;
+            }
 
-            const actionBtn = document.getElementById('destActionBtn');
-            actionBtn.innerHTML = `<span>${region.btnText || 'Explore Experiences'}</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
-            actionBtn.onclick = function() {
-                viewRegionTours(region.id);
-            };
+            // Fetch live weather
+            fetchZoneWeather(spot.coords, spot.name);
+
+            // Update road distance preview from user live GPS
+            updateSpotDistancePreview(spot.coords);
+
+            // Action Buttons
+            const actText = document.getElementById('destActionBtnText');
+            if (actText) {
+                actText.textContent = `Explore Tours in ${region ? region.title.replace(/^[^\s]+\s*/, '') : 'this Area'}`;
+            }
 
             const waBtn = document.getElementById('destWhatsappBtn');
-            const message = `Hello CeylonGo, I would like to plan a custom journey / chauffeur ride covering ${region.waQuery || region.title}!`;
-            waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(message);
-        }
-
-        function renderSpotsInSidebar(spots) {
-            const container = document.getElementById('destSpotsList');
-            container.innerHTML = '';
-
-            if (!spots || spots.length === 0) {
-                container.innerHTML = '<p class="text-xs text-gray-400 py-3 text-center">No attractions found matching your search</p>';
-                return;
+            const waText = document.getElementById('destWhatsappBtnText');
+            if (waText) {
+                waText.textContent = `Inquire Private Cab to ${spot.name}`;
             }
-
-            spots.forEach(function(s, idx) {
-                const item = document.createElement('div');
-                item.className = 'spot-item p-2 rounded-xl bg-gray-50 hover:bg-orange-50/70 border border-gray-100 hover:border-orange-200 transition cursor-pointer flex items-center justify-between gap-2 text-xs';
-                item.id = 'spot-' + s.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-                item.onclick = function() {
-                    if (leafletMapInstance && s.coords) {
-                        leafletMapInstance.flyTo(s.coords, 14, { duration: 1.2 });
-                        highlightSpotCard(s.name);
-                        fetchZoneWeather(s.coords, s.name);
-                    }
-                };
-
-                const safeName = s.name.replace(/'/g, "\\'");
-                item.innerHTML = `
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="text-sm flex-shrink-0">${s.icon || '📍'}</span>
-                        <div class="truncate">
-                            <p class="font-bold text-gray-800 text-[11px] truncate">${s.name}</p>
-                            <p class="text-[10px] text-gray-400 truncate">${s.type || 'Attraction'}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <button type="button" 
-                                onclick="event.stopPropagation(); calculateAndDrawRoute([${s.coords[0]}, ${s.coords[1]}], '${safeName}');" 
-                                class="text-[9px] font-black uppercase text-blue-700 bg-blue-100/90 hover:bg-blue-200 px-2 py-0.5 rounded-md transition cursor-pointer" 
-                                title="Get driving route from Airport">
-                            🚗 Route
-                        </button>
-                        <span class="text-[9px] font-black uppercase text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-md">
-                            Pin ➔
-                        </span>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        function highlightSpotCard(spotName) {
-            const cardId = 'spot-' + spotName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-            document.querySelectorAll('.spot-item').forEach(function(c) {
-                c.classList.remove('bg-orange-100', 'border-orange-400');
-            });
-            const target = document.getElementById(cardId);
-            if (target) {
-                target.classList.add('bg-orange-100', 'border-orange-400');
-                target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (waBtn) {
+                const msg = `Hello CeylonGo, I would like to plan a visit / private chauffeur ride to ${spot.name} (${spot.type || 'Attraction'})!`;
+                waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(msg);
             }
         }
 
-        function filterTouristSpots(query) {
-            const q = (query || '').toLowerCase().trim();
-            let sourceSpots = [];
+        function updateSpotDistancePreview(destCoords) {
+            const kmText = document.getElementById('destRoadKmText');
+            const timeText = document.getElementById('destRoadTimeText');
+            if (!kmText || !destCoords) return;
 
-            if (activeZoneKey === 'all') {
-                Object.keys(SRI_LANKA_REGIONS_DATA).forEach(function(rKey) {
-                    sourceSpots = sourceSpots.concat(SRI_LANKA_REGIONS_DATA[rKey].spots);
-                });
-            } else if (SRI_LANKA_REGIONS_DATA[activeZoneKey]) {
-                sourceSpots = SRI_LANKA_REGIONS_DATA[activeZoneKey].spots;
-            }
+            const startCoords = (activeOriginMode === 'gps' && cachedUserGpsCoords) ? cachedUserGpsCoords : AIRPORT_START_COORDS;
+            const startLabel = (activeOriginMode === 'gps' && cachedUserGpsCoords) ? 'your live location' : 'Airport (BIA)';
 
-            if (!q) {
-                renderSpotsInSidebar(sourceSpots);
-                document.getElementById('spotsCountBadge').textContent = sourceSpots.length + ' Places';
-                return;
-            }
+            const dLat = (destCoords[0] - startCoords[0]) * 111;
+            const dLng = (destCoords[1] - startCoords[1]) * 111 * Math.cos(startCoords[0] * Math.PI / 180);
+            const straightKm = Math.sqrt(dLat * dLat + dLng * dLng);
+            const roadKm = Math.round(straightKm * 1.38);
+            const hours = Math.floor(roadKm / 46);
+            const mins = Math.round(((roadKm / 46) % 1) * 60);
+            const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
 
-            const filtered = sourceSpots.filter(function(s) {
-                return s.name.toLowerCase().includes(q) || (s.type && s.type.toLowerCase().includes(q));
-            });
-
-            document.getElementById('spotsCountBadge').textContent = filtered.length + ' Places';
-            renderSpotsInSidebar(filtered);
+            kmText.textContent = `Road Distance: ~${roadKm} km`;
+            timeText.textContent = `Estimated ${durationStr} drive from ${startLabel}`;
         }
+
+        function viewSpotTours() {
+            closeMapModal();
+            const url = new URL(window.location.origin + '/');
+            if (currentSelectedSpot && currentSelectedSpot.name) {
+                url.searchParams.set('q', currentSelectedSpot.name);
+            } else if (currentSelectedRegion && currentSelectedRegion.catSlug) {
+                url.searchParams.set('cat', currentSelectedRegion.catSlug);
+            }
+            url.hash = 'packages-section';
+            window.location.href = url.toString();
+        }
+
+        // Backward compatibility wrappers
+        function updateDestSidebar(region) {
+            if (!region) return;
+            const firstSpot = (region.spots && region.spots[0]) ? region.spots[0] : {
+                name: region.title.replace(/^[^\s]+\s*/, ''),
+                type: region.badge,
+                coords: region.coords,
+                icon: region.title.split(' ')[0] || '📍'
+            };
+            showSpotDetail(firstSpot, region);
+        }
+
+        function renderSpotsInSidebar() {}
+        function highlightSpotCard() {}
+        function filterTouristSpots() {}
 
         function viewRegionTours(regionId) {
             const region = SRI_LANKA_REGIONS_DATA[regionId];
@@ -1608,13 +1682,19 @@
             }
         }
 
-        function getDirectionsForCurrentZone() {
-            if (currentActiveZoneCoords) {
+        function getDirectionsForCurrentSpot() {
+            if (currentTargetCoords) {
+                calculateAndDrawRoute(currentTargetCoords, currentTargetName || 'Destination');
+            } else if (currentActiveZoneCoords) {
                 calculateAndDrawRoute(currentActiveZoneCoords, currentActiveZoneTitle || 'Destination');
             } else if (SRI_LANKA_REGIONS_DATA[activeZoneKey]) {
                 const reg = SRI_LANKA_REGIONS_DATA[activeZoneKey];
                 calculateAndDrawRoute(reg.coords, reg.title);
             }
+        }
+
+        function getDirectionsForCurrentZone() {
+            getDirectionsForCurrentSpot();
         }
 
         async function calculateAndDrawRoute(destCoords, destName, forceOriginCoords, forceOriginLabel) {
