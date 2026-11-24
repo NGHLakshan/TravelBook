@@ -199,31 +199,81 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 91, 0, 0); }
         }
 
-        /* LOCAL SPOT PINS (Inside Zone — only shown when zoomed in) */
-        .game-spot-pin {
+        /* LOCAL SPOT PINS (Clean, Separated Google Maps / POI Style) */
+        .spot-marker-container {
             display: inline-flex;
+            flex-direction: column;
             align-items: center;
-            gap: 5px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .spot-marker-container:hover {
+            transform: translate(-50%, -50%) scale(1.18);
+            z-index: 99999 !important;
+        }
+        .spot-pin-bubble {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
             background: #ffffff;
-            color: #0f172a;
-            padding: 3px 9px;
-            border-radius: 9999px;
+            border: 2px solid #FF5B00;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .spot-marker-container:hover .spot-pin-bubble {
+            background: #FF5B00;
+            color: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 6px 18px rgba(255, 91, 0, 0.55);
+        }
+        .spot-marker-container.active-spot .spot-pin-bubble {
+            background: #FF5B00;
+            color: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(255, 91, 0, 0.35), 0 8px 20px rgba(255, 91, 0, 0.6);
+            transform: scale(1.15);
+        }
+        .spot-pin-label {
+            margin-top: 3px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            border: 1.5px solid #cbd5e1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 2px 7px;
+            border-radius: 9999px;
             white-space: nowrap;
-            transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.25s ease;
-            cursor: pointer;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+            pointer-events: none;
         }
-        .game-spot-pin:hover {
-            transform: scale(1.1) translateY(-2px);
-            border-color: #FF5B00;
-            color: #FF5B00;
+        .spot-marker-container:hover .spot-pin-label,
+        .spot-marker-container.active-spot .spot-pin-label {
+            background: #FF5B00 !important;
+            border-color: #ffffff !important;
+            color: #ffffff;
+            font-weight: 900;
+            box-shadow: 0 4px 14px rgba(255, 91, 0, 0.5);
+            display: inline-block !important;
+            z-index: 99999 !important;
         }
-        /* Hide spot pins text when zoomed out — no clutter on island overview */
-        .zoom-compact .game-spot-pin {
+        /* When zoom is compact (< 12), hide labels so nearby places never clump or overlap */
+        .zoom-compact .spot-pin-label {
             display: none !important;
+        }
+        .zoom-compact .spot-marker-container:hover .spot-pin-label,
+        .zoom-compact .spot-marker-container.active-spot .spot-pin-label {
+            display: inline-block !important;
         }
     </style>
     {% block extra_head %}{% endblock %}
@@ -704,8 +754,8 @@
                 waQuery: "Cultural Triangle (Sigiriya, Dambulla, Polonnaruwa, Anuradhapura)",
                 spots: [
                     { name: "Sigiriya Rock Fortress", type: "World Wonder", coords: [7.9570, 80.7603], icon: "🦁" },
-                    { name: "Sigiriya Museum", type: "Museum & Archaeology", coords: [7.9540, 80.7550], icon: "🏛️" },
-                    { name: "Pidurangala Rock", type: "Sunrise Viewpoint", coords: [7.9654, 80.7634], icon: "🌄" },
+                    { name: "Sigiriya Museum", type: "Museum & Archaeology", coords: [7.9505, 80.7485], icon: "🏛️" },
+                    { name: "Pidurangala Rock", type: "Sunrise Viewpoint", coords: [7.9785, 80.7650], icon: "🌄" },
                     { name: "Dambulla Golden Cave Temple", type: "Sacred Temple", coords: [7.8567, 80.6485], icon: "🛕" },
                     { name: "Polonnaruwa Sacred City", type: "Ancient Capital", coords: [7.9403, 81.0188], icon: "🏛️" },
                     { name: "Gal Viharaya", type: "Carved Granite Buddhas", coords: [7.9647, 81.0042], icon: "🪨" },
@@ -975,21 +1025,18 @@
             const mapEl = document.getElementById('sriLankaMap');
             if (!mapEl) return;
 
-            // Zoom <= 9.2 → compact island overview: only glowing icon dots, ZERO text labels
-            // Zoom >  9.2 → detailed zone view: short name pill appears below each icon
-            if (currentZoom <= 9.2) {
+            // Zoom < 12 → compact mode: clean icon bubbles, labels hidden so spots never clump
+            // Zoom >= 12 → detailed local mode: full labels visible with generous space between pins
+            if (currentZoom < 12.0) {
                 mapEl.classList.add('zoom-compact');
                 mapEl.classList.remove('zoom-detailed');
 
                 // Auto-clear zone spots ONLY when user manually zooms all the way out (zoom <= 7.6)
                 if (!isZoomingToTarget && activeZoneKey !== 'all' && currentZoom <= 7.6) {
                     clearSpotMarkers();
-                    if (activeZoneCircle && leafletMapInstance) {
-                        leafletMapInstance.removeLayer(activeZoneCircle);
-                        activeZoneCircle = null;
-                    }
                     activeZoneKey = 'all';
                     updateZoomPillsUI('all');
+                    setLandmarksVisibilityForZone(null);
                     const sidebar = document.getElementById('destSidebar');
                     if (sidebar) sidebar.style.display = 'none';
                     setTimeout(function() {
@@ -1124,6 +1171,12 @@
         }
 
         function renderGameLandmarks() {
+            landmarkMarkers.forEach(function(item) {
+                if (item && item.marker) leafletMapInstance.removeLayer(item.marker);
+                else if (item) leafletMapInstance.removeLayer(item);
+            });
+            landmarkMarkers = [];
+
             GAME_LANDMARKS.forEach(function(lm) {
                 const iconEmoji = lm.name.split(' ')[0] || '📍';
                 const displayName = lm.short || lm.name.replace(/^[^\s]+\s*/, '');
@@ -1152,7 +1205,22 @@
                     }
                     zoomToLandmark(lm);
                 });
-                landmarkMarkers.push(marker);
+                landmarkMarkers.push({ marker: marker, zone: lm.zone, name: lm.name });
+            });
+        }
+
+        // Hide overview landmark orbs in the active zone so they don't clash/overlap with spot pins
+        function setLandmarksVisibilityForZone(activeZone) {
+            landmarkMarkers.forEach(function(item) {
+                if (!item || !item.marker) return;
+                const el = item.marker.getElement();
+                if (activeZone && item.zone === activeZone) {
+                    item.marker.setOpacity(0);
+                    if (el) el.style.display = 'none';
+                } else {
+                    item.marker.setOpacity(1);
+                    if (el) el.style.display = 'block';
+                }
             });
         }
 
@@ -1239,22 +1307,11 @@
 
             const region = SRI_LANKA_REGIONS_DATA[lm.zone];
             if (region) {
+                // Render specific spot markers for this region
                 renderZoneSpotMarkers(region);
 
-                if (activeZoneCircle && leafletMapInstance) {
-                    leafletMapInstance.removeLayer(activeZoneCircle);
-                    activeZoneCircle = null;
-                }
-                const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
-                activeZoneCircle = L.circle(lm.coords, {
-                    color: zoneColor,
-                    weight: 2,
-                    opacity: 0.8,
-                    dashArray: '8, 8',
-                    fillColor: zoneColor,
-                    fillOpacity: 0.08,
-                    radius: 20000
-                }).addTo(leafletMapInstance);
+                // Hide duplicate overview landmarks in this zone so they don't clash with spot pins
+                setLandmarksVisibilityForZone(lm.zone);
 
                 // Match to specific spot or create one for landmark
                 let matchedSpot = null;
@@ -1272,8 +1329,8 @@
                 showSpotDetail(matchedSpot, region);
             }
 
-            // Fly directly and smoothly into the clicked landmark
-            leafletMapInstance.flyTo(lm.coords, 11, { duration: 1.2, easeLinearity: 0.25 });
+            // Fly directly and accurately into the exact place at clean local zoom
+            leafletMapInstance.flyTo(lm.coords, 13.5, { duration: 1.2, easeLinearity: 0.25 });
 
             setTimeout(function() {
                 isZoomingToTarget = false;
@@ -1293,12 +1350,15 @@
             if (!region || !region.spots) return;
 
             region.spots.forEach(function(spot) {
+                const isSelected = currentSelectedSpot && currentSelectedSpot.name === spot.name;
+                const spotId = 'spot-marker-' + spot.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+
                 const html = `
-                    <div class="game-badge-wrapper" title="${spot.name} (${spot.type})">
-                        <div class="game-spot-pin">
-                            <span class="text-xs">${spot.icon || '📍'}</span>
-                            <span>${spot.name}</span>
+                    <div class="spot-marker-container ${isSelected ? 'active-spot' : ''}" id="${spotId}" title="${spot.name} (${spot.type})">
+                        <div class="spot-pin-bubble">
+                            <span>${spot.icon || '📍'}</span>
                         </div>
+                        <span class="spot-pin-label">${spot.name}</span>
                     </div>
                 `;
 
@@ -1314,23 +1374,27 @@
                     if (e && e.originalEvent) {
                         L.DomEvent.stopPropagation(e);
                     }
-                    leafletMapInstance.flyTo(spot.coords, 13.5, { duration: 1.2, easeLinearity: 0.25 });
+                    leafletMapInstance.flyTo(spot.coords, 13.5, { duration: 1.0, easeLinearity: 0.25 });
                     showSpotDetail(spot, region);
+                    highlightActiveSpotMarker(spot.name);
                 });
                 spotMarkers.push(marker);
             });
         }
 
-        let activeZoneCircle = null;
+        function highlightActiveSpotMarker(spotName) {
+            if (!spotName) return;
+            document.querySelectorAll('.spot-marker-container').forEach(function(el) {
+                el.classList.remove('active-spot');
+            });
+            const target = document.getElementById('spot-marker-' + spotName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
+            if (target) {
+                target.classList.add('active-spot');
+            }
+        }
 
         function focusDestination(key) {
             updateZoomPillsUI(key);
-
-            // Remove existing glowing zone circle
-            if (activeZoneCircle && leafletMapInstance) {
-                leafletMapInstance.removeLayer(activeZoneCircle);
-                activeZoneCircle = null;
-            }
 
             if (key === 'all') {
                 isZoomingToTarget = true;
@@ -1339,6 +1403,7 @@
                 }
                 clearSpotMarkers();
                 activeZoneKey = 'all';
+                setLandmarksVisibilityForZone(null);
                 showAllSriLankaOverview();
                 setTimeout(function() {
                     isZoomingToTarget = false;
@@ -1353,17 +1418,7 @@
             activeZoneKey = key;
 
             renderZoneSpotMarkers(region);
-
-            const zoneColor = region.isCoreHub ? '#FF5B00' : '#2563eb';
-            activeZoneCircle = L.circle(region.coords, {
-                color: zoneColor,
-                weight: 2,
-                opacity: 0.8,
-                dashArray: '8, 8',
-                fillColor: zoneColor,
-                fillOpacity: 0.08,
-                radius: 28000
-            }).addTo(leafletMapInstance);
+            setLandmarksVisibilityForZone(key);
 
             // Select primary highlight spot in this zone
             const firstSpot = (region.spots && region.spots[0]) ? region.spots[0] : {
@@ -1373,9 +1428,10 @@
                 icon: region.title.split(' ')[0] || '📍'
             };
             showSpotDetail(firstSpot, region);
+            highlightActiveSpotMarker(firstSpot.name);
 
-            const targetZoom = Math.max(region.zoom || 10, 10);
-            leafletMapInstance.flyTo(region.coords, targetZoom, { duration: 1.2, easeLinearity: 0.25 });
+            // Fly directly to the first spot at clean local zoom
+            leafletMapInstance.flyTo(firstSpot.coords, 13.5, { duration: 1.2, easeLinearity: 0.25 });
 
             setTimeout(function() {
                 isZoomingToTarget = false;
@@ -1396,6 +1452,7 @@
             currentActiveZoneTitle = '';
             currentSelectedSpot = null;
             currentSelectedRegion = null;
+            setLandmarksVisibilityForZone(null);
 
             if (leafletMapInstance) {
                 setTimeout(function() {
@@ -1412,6 +1469,7 @@
             currentSelectedRegion = region;
             currentTargetCoords = spot.coords;
             currentTargetName = spot.name;
+            highlightActiveSpotMarker(spot.name);
 
             const sidebar = document.getElementById('destSidebar');
             if (sidebar) {
