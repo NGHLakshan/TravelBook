@@ -551,6 +551,11 @@
                         <span>Interactive Destination Map • Smooth Zoom & Pan</span>
                     </div>
 
+                    <!-- Floating Notification Toast -->
+                    <div id="mapToast" style="display:none;" class="absolute top-16 left-1/2 -translate-x-1/2 z-[1002] bg-gray-900/95 text-white px-4 py-2 rounded-2xl text-xs font-bold shadow-2xl border border-white/20 flex items-center gap-2 pointer-events-none transition-all">
+                        <span id="mapToastText">Notification</span>
+                    </div>
+
                     <!-- Floating Live Driving Route Card (Google Maps Real Road Route) -->
                     <div id="mapRouteCard" style="display:none;" class="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-md z-[1001] bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-blue-200 shadow-2xl flex flex-col gap-2.5 transition-all">
                         <div class="flex items-start justify-between gap-2">
@@ -558,7 +563,7 @@
                                 <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow-sm">🚗</span>
                                 <div class="min-w-0">
                                     <p class="text-xs font-black text-gray-900 truncate" id="routeDestTitle">Route to Destination</p>
-                                    <p class="text-[10px] text-gray-500 truncate" id="routeStartTitle">From: Detecting your location...</p>
+                                    <p class="text-[10px] text-gray-500 truncate" id="routeStartTitle">From: Live GPS Location</p>
                                 </div>
                             </div>
                             <button type="button" onclick="clearActiveRoute()" title="Close route" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-xs transition cursor-pointer flex-shrink-0">
@@ -566,14 +571,25 @@
                             </button>
                         </div>
 
-                        <!-- Start Origin Toggle: My Live GPS Location vs Colombo Airport -->
-                        <div class="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-xl text-[10px] font-bold">
-                            <button type="button" id="btnRouteGps" onclick="switchRouteOrigin('gps')" class="flex-1 py-1 px-2 rounded-lg bg-white text-blue-700 shadow-xs flex items-center justify-center gap-1 transition cursor-pointer">
-                                <i class="fa-solid fa-location-crosshairs text-[10px] text-blue-600"></i>
-                                <span>My Location (GPS)</span>
+                        <!-- Start Origin Selector Chips -->
+                        <div class="flex items-center gap-1 overflow-x-auto pb-0.5 text-[10px] font-bold scrollbar-none">
+                            <button type="button" id="btnCardOriginGps" onclick="selectRouteOrigin('gps')" class="origin-btn px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-xs whitespace-nowrap cursor-pointer transition">
+                                📍 Live GPS
                             </button>
-                            <button type="button" id="btnRouteAirport" onclick="switchRouteOrigin('airport')" class="flex-1 py-1 px-2 rounded-lg text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1 transition cursor-pointer">
-                                <span>✈️ Airport (BIA)</span>
+                            <button type="button" id="btnCardOriginColombo" onclick="selectRouteOrigin('colombo')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
+                                🏙️ Colombo
+                            </button>
+                            <button type="button" id="btnCardOriginAirport" onclick="selectRouteOrigin('airport')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
+                                ✈️ Airport
+                            </button>
+                            <button type="button" id="btnCardOriginKandy" onclick="selectRouteOrigin('kandy')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
+                                👑 Kandy
+                            </button>
+                            <button type="button" id="btnCardOriginGalle" onclick="selectRouteOrigin('galle')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
+                                🏰 Galle
+                            </button>
+                            <button type="button" id="btnCardOriginCustom" onclick="selectRouteOrigin('custom')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
+                                🎯 Pick Map
                             </button>
                         </div>
 
@@ -655,16 +671,48 @@
                                 <span class="text-[9px] font-bold text-sky-600 bg-white/80 px-1.5 py-0.5 rounded-md shadow-2xs flex-shrink-0">Open-Meteo</span>
                             </div>
 
-                            <!-- Road Distance from User Live GPS Card -->
-                            <div id="destRoadDistanceCard" class="p-2.5 rounded-xl bg-blue-50/90 border border-blue-100 text-xs flex items-center justify-between">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <span class="text-base flex-shrink-0">🛣️</span>
-                                    <div class="min-w-0 truncate">
-                                        <span id="destRoadKmText" class="font-black text-blue-950 text-xs truncate block">Distance: Calculating...</span>
-                                        <p id="destRoadTimeText" class="text-[9px] text-blue-700 font-semibold truncate">from your live location</p>
+                            <!-- Real Road Distance & Starting Point Selector -->
+                            <div id="destRoadDistanceCard" class="p-2.5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/40 border border-blue-100 text-xs space-y-2 shadow-2xs">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="text-base flex-shrink-0">🛣️</span>
+                                        <div class="min-w-0">
+                                            <span id="destRoadKmText" class="font-black text-blue-950 text-xs leading-tight block">Calculating distance...</span>
+                                            <p id="destRoadTimeText" class="text-[9px] text-blue-700 font-bold truncate">Real driving road distance</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[9px] font-extrabold text-blue-700 bg-blue-100/90 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                                        Real Roads
+                                    </span>
+                                </div>
+
+                                <!-- Starting Point Origin Selector -->
+                                <div class="pt-1.5 border-t border-blue-100/80">
+                                    <div class="flex items-center justify-between text-[10px] font-extrabold text-gray-500 mb-1">
+                                        <span>Measure Distance From:</span>
+                                        <span id="activeOriginLabel" class="text-blue-700 font-black">📍 Live GPS</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1 text-[10px] font-bold">
+                                        <button type="button" onclick="selectRouteOrigin('gps')" id="btnSideOriginGps" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-blue-600 text-white shadow-2xs">
+                                            📍 My GPS
+                                        </button>
+                                        <button type="button" onclick="selectRouteOrigin('colombo')" id="btnSideOriginColombo" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
+                                            🏙️ Colombo
+                                        </button>
+                                        <button type="button" onclick="selectRouteOrigin('airport')" id="btnSideOriginAirport" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
+                                            ✈️ Airport
+                                        </button>
+                                        <button type="button" onclick="selectRouteOrigin('kandy')" id="btnSideOriginKandy" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
+                                            👑 Kandy
+                                        </button>
+                                        <button type="button" onclick="selectRouteOrigin('galle')" id="btnSideOriginGalle" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
+                                            🏰 Galle
+                                        </button>
+                                        <button type="button" onclick="selectRouteOrigin('custom')" id="btnSideOriginCustom" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
+                                            🎯 Pick Map
+                                        </button>
                                     </div>
                                 </div>
-                                <span class="text-[9px] font-extrabold text-blue-700 bg-blue-100/80 px-1.5 py-0.5 rounded-md flex-shrink-0">Real Roads</span>
                             </div>
                         </div>
 
@@ -1003,6 +1051,32 @@
         let currentActiveZoneTitle = '';
         const weatherCache = {};
 
+        // SRI LANKA ORIGIN HUBS FOR MEASURING ROUTE & DISTANCE
+        const ROUTE_ORIGIN_HUBS = {
+            gps: { key: 'gps', name: 'My Current Location 📍', coords: null, isGps: true, chipLabel: '📍 My GPS' },
+            colombo: { key: 'colombo', name: 'Colombo City (Fort) 🏙️', coords: [6.9271, 79.8612], chipLabel: '🏙️ Colombo' },
+            airport: { key: 'airport', name: 'Colombo Airport (BIA) ✈️', coords: [7.1808, 79.8841], chipLabel: '✈️ Airport' },
+            kandy: { key: 'kandy', name: 'Kandy Royal City 👑', coords: [7.2906, 80.6337], chipLabel: '👑 Kandy' },
+            galle: { key: 'galle', name: 'Galle Fort 🏰', coords: [6.0272, 80.2170], chipLabel: '🏰 Galle' },
+            custom: { key: 'custom', name: 'Custom Map Pin 🎯', coords: null, isCustom: true, chipLabel: '🎯 Pick Map' }
+        };
+        let selectedOriginKey = 'gps';
+        let customPickedCoords = null;
+        let isPickingOnMap = false;
+        let toastTimeout = null;
+
+        function showMapToast(msg) {
+            const toast = document.getElementById('mapToast');
+            const text = document.getElementById('mapToastText');
+            if (!toast || !text) return;
+            text.textContent = msg;
+            toast.style.display = 'flex';
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(function() {
+                toast.style.display = 'none';
+            }, 4000);
+        }
+
         function updateZoomPillsUI(zoneKey) {
             document.querySelectorAll('.zone-pill').forEach(function(pill) {
                 if (pill.getAttribute('data-zone') === zoneKey) {
@@ -1143,6 +1217,28 @@
 
             // Automatically toggle compact vs detailed pins on zoom & move changes
             leafletMapInstance.on('zoom zoomend moveend', updateZoomLevelClass);
+
+            // Map click listener for Pick on Map starting point
+            leafletMapInstance.on('click', function(e) {
+                if (isPickingOnMap && e.latlng) {
+                    isPickingOnMap = false;
+                    const mapEl = document.getElementById('sriLankaMap');
+                    if (mapEl) mapEl.style.cursor = '';
+
+                    customPickedCoords = [e.latlng.lat, e.latlng.lng];
+                    const label = 'Custom Map Pin 🎯';
+
+                    showMapToast('📍 Starting location set from map!');
+                    updateOriginButtonsUI('custom');
+
+                    if (currentTargetCoords) {
+                        calculateAndDrawRoute(currentTargetCoords, currentTargetName, customPickedCoords, label);
+                    }
+                    if (currentSelectedSpot) {
+                        updateSpotDistancePreview(currentSelectedSpot.coords);
+                    }
+                }
+            });
 
             // Initialize default vibrant Esri Topo layer (100% working, zero blocks)
             switchMapTheme('osm');
@@ -1540,8 +1636,25 @@
             const timeText = document.getElementById('destRoadTimeText');
             if (!kmText || !destCoords) return;
 
-            const startCoords = (activeOriginMode === 'gps' && cachedUserGpsCoords) ? cachedUserGpsCoords : AIRPORT_START_COORDS;
-            const startLabel = (activeOriginMode === 'gps' && cachedUserGpsCoords) ? 'your live location' : 'Airport (BIA)';
+            let startCoords = null;
+            let startLabel = '';
+
+            if (selectedOriginKey === 'gps') {
+                if (cachedUserGpsCoords) {
+                    startCoords = cachedUserGpsCoords;
+                    startLabel = 'your live location 📍';
+                } else {
+                    startCoords = ROUTE_ORIGIN_HUBS.colombo.coords;
+                    startLabel = 'Colombo (GPS pending)';
+                }
+            } else if (selectedOriginKey === 'custom' && customPickedCoords) {
+                startCoords = customPickedCoords;
+                startLabel = 'custom map pin 🎯';
+            } else {
+                const hub = ROUTE_ORIGIN_HUBS[selectedOriginKey] || ROUTE_ORIGIN_HUBS.colombo;
+                startCoords = hub.coords || [6.9271, 79.8612];
+                startLabel = hub.name;
+            }
 
             const dLat = (destCoords[0] - startCoords[0]) * 111;
             const dLng = (destCoords[1] - startCoords[1]) * 111 * Math.cos(startCoords[0] * Math.PI / 180);
@@ -1696,48 +1809,117 @@
                         const lat = pos.coords.latitude;
                         const lng = pos.coords.longitude;
                         cachedUserGpsCoords = [lat, lng];
+                        showMapToast('✅ Live location detected via GPS!');
                         if (callback) callback(cachedUserGpsCoords, 'My Current Location 📍');
                     },
                     function(err) {
                         console.warn('Geolocation denied or unavailable:', err);
-                        // Default to Colombo Airport if GPS is denied
-                        if (callback) callback(AIRPORT_START_COORDS, 'Colombo Airport (BIA) ✈️');
+                        showMapToast('📍 GPS not detected. Calculating from Colombo (or pick a city below)!');
+                        const defaultHub = ROUTE_ORIGIN_HUBS.colombo;
+                        if (callback) callback(defaultHub.coords, defaultHub.name);
                     },
-                    { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
                 );
             } else {
-                if (callback) callback(AIRPORT_START_COORDS, 'Colombo Airport (BIA) ✈️');
+                showMapToast('📍 Browser GPS not supported. Defaulting to Colombo!');
+                const defaultHub = ROUTE_ORIGIN_HUBS.colombo;
+                if (callback) callback(defaultHub.coords, defaultHub.name);
+            }
+        }
+
+        function updateOriginButtonsUI(key) {
+            selectedOriginKey = key;
+
+            const sideBtnIds = {
+                gps: 'btnSideOriginGps',
+                colombo: 'btnSideOriginColombo',
+                airport: 'btnSideOriginAirport',
+                kandy: 'btnSideOriginKandy',
+                galle: 'btnSideOriginGalle',
+                custom: 'btnSideOriginCustom'
+            };
+            Object.keys(sideBtnIds).forEach(function(k) {
+                const btn = document.getElementById(sideBtnIds[k]);
+                if (!btn) return;
+                if (k === key) {
+                    btn.className = 'side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-blue-600 text-white shadow-2xs font-bold';
+                } else {
+                    btn.className = 'side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50';
+                }
+            });
+
+            const cardBtnIds = {
+                gps: 'btnCardOriginGps',
+                colombo: 'btnCardOriginColombo',
+                airport: 'btnCardOriginAirport',
+                kandy: 'btnCardOriginKandy',
+                galle: 'btnCardOriginGalle',
+                custom: 'btnCardOriginCustom'
+            };
+            Object.keys(cardBtnIds).forEach(function(k) {
+                const btn = document.getElementById(cardBtnIds[k]);
+                if (!btn) return;
+                if (k === key) {
+                    btn.className = 'origin-btn px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-xs whitespace-nowrap cursor-pointer transition font-bold';
+                } else {
+                    btn.className = 'origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition';
+                }
+            });
+
+            const labelEl = document.getElementById('activeOriginLabel');
+            if (labelEl) {
+                const hub = ROUTE_ORIGIN_HUBS[key];
+                labelEl.textContent = hub ? hub.chipLabel : '📍 Custom';
+            }
+        }
+
+        function selectRouteOrigin(key) {
+            selectedOriginKey = key;
+            activeOriginMode = key;
+            updateOriginButtonsUI(key);
+
+            if (key === 'gps') {
+                isPickingOnMap = false;
+                const mapEl = document.getElementById('sriLankaMap');
+                if (mapEl) mapEl.style.cursor = '';
+                showMapToast('📍 Detecting your live location via GPS...');
+                getUserGpsLocation(function(coords, label) {
+                    if (currentTargetCoords) {
+                        calculateAndDrawRoute(currentTargetCoords, currentTargetName, coords, label);
+                    }
+                    if (currentSelectedSpot) {
+                        updateSpotDistancePreview(currentSelectedSpot.coords);
+                    }
+                });
+                return;
+            }
+
+            if (key === 'custom') {
+                isPickingOnMap = true;
+                const mapEl = document.getElementById('sriLankaMap');
+                if (mapEl) mapEl.style.cursor = 'crosshair';
+                showMapToast('🎯 Click anywhere on the map to set your starting point!');
+                return;
+            }
+
+            isPickingOnMap = false;
+            const mapEl = document.getElementById('sriLankaMap');
+            if (mapEl) mapEl.style.cursor = '';
+
+            const hub = ROUTE_ORIGIN_HUBS[key];
+            if (hub && hub.coords) {
+                showMapToast('🛣️ Calculating route from ' + hub.name);
+                if (currentTargetCoords) {
+                    calculateAndDrawRoute(currentTargetCoords, currentTargetName, hub.coords, hub.name);
+                }
+                if (currentSelectedSpot) {
+                    updateSpotDistancePreview(currentSelectedSpot.coords);
+                }
             }
         }
 
         function switchRouteOrigin(mode) {
-            activeOriginMode = mode;
-            const btnGps = document.getElementById('btnRouteGps');
-            const btnAirport = document.getElementById('btnRouteAirport');
-
-            if (mode === 'gps') {
-                if (btnGps) {
-                    btnGps.className = 'flex-1 py-1 px-2 rounded-lg bg-white text-blue-700 shadow-xs flex items-center justify-center gap-1 transition cursor-pointer font-bold';
-                }
-                if (btnAirport) {
-                    btnAirport.className = 'flex-1 py-1 px-2 rounded-lg text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1 transition cursor-pointer';
-                }
-                if (currentTargetCoords) {
-                    getUserGpsLocation(function(coords, label) {
-                        calculateAndDrawRoute(currentTargetCoords, currentTargetName, coords, label);
-                    });
-                }
-            } else {
-                if (btnAirport) {
-                    btnAirport.className = 'flex-1 py-1 px-2 rounded-lg bg-white text-blue-700 shadow-xs flex items-center justify-center gap-1 transition cursor-pointer font-bold';
-                }
-                if (btnGps) {
-                    btnGps.className = 'flex-1 py-1 px-2 rounded-lg text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1 transition cursor-pointer';
-                }
-                if (currentTargetCoords) {
-                    calculateAndDrawRoute(currentTargetCoords, currentTargetName, AIRPORT_START_COORDS, 'Colombo Airport (BIA) ✈️');
-                }
-            }
+            selectRouteOrigin(mode);
         }
 
         function getDirectionsForCurrentSpot() {
@@ -1783,15 +1965,24 @@
             let originLabel = forceOriginLabel;
 
             if (!originCoords) {
-                if (activeOriginMode === 'gps') {
-                    if (startTitleEl) startTitleEl.textContent = 'From: Detecting your GPS location...';
-                    getUserGpsLocation(function(c, lbl) {
-                        calculateAndDrawRoute(destCoords, destName, c, lbl);
-                    });
-                    return;
+                if (selectedOriginKey === 'gps') {
+                    if (cachedUserGpsCoords) {
+                        originCoords = cachedUserGpsCoords;
+                        originLabel = 'My Current Location 📍';
+                    } else {
+                        if (startTitleEl) startTitleEl.textContent = 'From: Detecting your GPS location...';
+                        getUserGpsLocation(function(c, lbl) {
+                            calculateAndDrawRoute(destCoords, destName, c, lbl);
+                        });
+                        return;
+                    }
+                } else if (selectedOriginKey === 'custom' && customPickedCoords) {
+                    originCoords = customPickedCoords;
+                    originLabel = 'Custom Map Pin 🎯';
                 } else {
-                    originCoords = AIRPORT_START_COORDS;
-                    originLabel = 'Colombo Airport (BIA) ✈️';
+                    const hub = ROUTE_ORIGIN_HUBS[selectedOriginKey] || ROUTE_ORIGIN_HUBS.colombo;
+                    originCoords = hub.coords || [6.9271, 79.8612];
+                    originLabel = hub.name || 'Colombo City 🏙️';
                 }
             }
 
@@ -1810,25 +2001,25 @@
                 bookBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(waText);
             }
 
-            // Start Location Marker (Pulsing blue GPS dot or Airport icon)
+            // Start Location Marker (Pulsing blue GPS dot or chosen City badge)
             const isGpsOrigin = originLabel.includes('Location') || originLabel.includes('Live');
             const startIcon = L.divIcon({
                 className: 'route-start-marker',
                 html: isGpsOrigin ? `
                     <div style="position:relative;display:flex;align-items:center;gap:6px;">
-                        <span style="position:relative;display:flex;width:16px;height:16px;">
+                        <span style="position:relative;display:flex;width:18px;height:18px;">
                             <span style="animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;position:absolute;display:inline-flex;height:100%;width:100%;border-radius:9999px;background-color:#60a5fa;opacity:0.75;"></span>
-                            <span style="position:relative;display:inline-flex;border-radius:9999px;height:16px;width:16px;background-color:#2563eb;border:2px solid #ffffff;box-shadow:0 3px 10px rgba(0,0,0,0.4);"></span>
+                            <span style="position:relative;display:inline-flex;border-radius:9999px;height:18px;width:18px;background-color:#2563eb;border:2.5px solid #ffffff;box-shadow:0 3px 10px rgba(0,0,0,0.4);"></span>
                         </span>
                         <span style="background:rgba(15,23,42,0.92);color:#ffffff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:9999px;box-shadow:0 4px 10px rgba(0,0,0,0.3);white-space:nowrap;border:1px solid rgba(255,255,255,0.7);">
                             📍 You Are Here
                         </span>
                     </div>` : `
-                    <div style="background:#2563eb;color:#ffffff;border-radius:9999px;padding:3px 9px;font-size:10px;font-weight:900;border:2px solid #ffffff;box-shadow:0 4px 14px rgba(0,0,0,0.35);white-space:nowrap;display:flex;align-items:center;gap:4px;">
-                        <span>✈️</span><span>Airport (BIA)</span>
+                    <div style="background:#2563eb;color:#ffffff;border-radius:9999px;padding:3px 9px;font-size:10px;font-weight:900;border:2px solid #ffffff;box-shadow:0 4px 14px rgba(37,99,235,0.4);white-space:nowrap;display:flex;align-items:center;gap:4px;">
+                        <span>${originLabel}</span>
                     </div>`,
                 iconSize: [0, 0],
-                iconAnchor: isGpsOrigin ? [8, 8] : [45, 15]
+                iconAnchor: isGpsOrigin ? [9, 9] : [40, 15]
             });
             activeRouteStartMarker = L.marker(originCoords, { icon: startIcon }).addTo(leafletMapInstance);
 
@@ -1921,6 +2112,10 @@
         }
 
         function clearActiveRoute() {
+            isPickingOnMap = false;
+            const mapEl = document.getElementById('sriLankaMap');
+            if (mapEl) mapEl.style.cursor = '';
+
             if (activeRouteCasing && leafletMapInstance) {
                 leafletMapInstance.removeLayer(activeRouteCasing);
                 activeRouteCasing = null;
