@@ -571,26 +571,23 @@
                             </button>
                         </div>
 
-                        <!-- Start Origin Selector Chips -->
-                        <div class="flex items-center gap-1 overflow-x-auto pb-0.5 text-[10px] font-bold scrollbar-none">
-                            <button type="button" id="btnCardOriginGps" onclick="selectRouteOrigin('gps')" class="origin-btn px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-xs whitespace-nowrap cursor-pointer transition">
-                                📍 Live GPS
-                            </button>
-                            <button type="button" id="btnCardOriginColombo" onclick="selectRouteOrigin('colombo')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
-                                🏙️ Colombo
-                            </button>
-                            <button type="button" id="btnCardOriginAirport" onclick="selectRouteOrigin('airport')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
-                                ✈️ Airport
-                            </button>
-                            <button type="button" id="btnCardOriginKandy" onclick="selectRouteOrigin('kandy')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
-                                👑 Kandy
-                            </button>
-                            <button type="button" id="btnCardOriginGalle" onclick="selectRouteOrigin('galle')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
-                                🏰 Galle
-                            </button>
-                            <button type="button" id="btnCardOriginCustom" onclick="selectRouteOrigin('custom')" class="origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition">
-                                🎯 Pick Map
-                            </button>
+                        <!-- Start Origin Selector: My Location + Searchable Input -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between text-[10px] font-extrabold text-gray-500">
+                                <span>Starting From:</span>
+                                <span id="routeOriginStatusBadge" class="text-blue-700 font-black truncate max-w-[150px]">📍 My Location</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 relative">
+                                <button type="button" id="btnCardPickMyLocation" onclick="useMyLocation()" class="py-1.5 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer flex-shrink-0 shadow-2xs">
+                                    <i class="fa-solid fa-crosshairs text-[11px]"></i>
+                                    <span>My Location</span>
+                                </button>
+                                <div class="relative flex-1">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                                    <input type="text" id="cardStartLocationInput" onkeydown="handleInputKeyDown(event, true)" oninput="handleStartLocationInput(this.value, true)" onfocus="handleStartLocationInput(this.value, true)" placeholder="Type starting city (e.g. Kandy, Galle)..." autocomplete="off" class="w-full pl-7 pr-3 py-1.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-blue-500 bg-white shadow-2xs font-semibold text-gray-800 placeholder-gray-400">
+                                    <div id="cardLocationDropdown" style="display:none;" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-44 overflow-y-auto py-1"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Real Road Distance & Time Banner -->
@@ -686,31 +683,22 @@
                                     </span>
                                 </div>
 
-                                <!-- Starting Point Origin Selector -->
-                                <div class="pt-1.5 border-t border-blue-100/80">
-                                    <div class="flex items-center justify-between text-[10px] font-extrabold text-gray-500 mb-1">
+                                <!-- Starting Point Origin Selector: My Location + Searchable Input -->
+                                <div class="pt-1.5 border-t border-blue-100/80 space-y-1.5">
+                                    <div class="flex items-center justify-between text-[10px] font-extrabold text-gray-500">
                                         <span>Measure Distance From:</span>
-                                        <span id="activeOriginLabel" class="text-blue-700 font-black">📍 Live GPS</span>
+                                        <span id="activeOriginLabel" class="text-blue-700 font-black truncate max-w-[150px]">📍 My Location</span>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1 text-[10px] font-bold">
-                                        <button type="button" onclick="selectRouteOrigin('gps')" id="btnSideOriginGps" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-blue-600 text-white shadow-2xs">
-                                            📍 My GPS
+                                    <div class="flex items-center gap-1.5 relative">
+                                        <button type="button" id="btnSidePickMyLocation" onclick="useMyLocation()" class="py-1.5 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer flex-shrink-0 shadow-2xs">
+                                            <i class="fa-solid fa-crosshairs text-[11px]"></i>
+                                            <span>My Location</span>
                                         </button>
-                                        <button type="button" onclick="selectRouteOrigin('colombo')" id="btnSideOriginColombo" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
-                                            🏙️ Colombo
-                                        </button>
-                                        <button type="button" onclick="selectRouteOrigin('airport')" id="btnSideOriginAirport" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
-                                            ✈️ Airport
-                                        </button>
-                                        <button type="button" onclick="selectRouteOrigin('kandy')" id="btnSideOriginKandy" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
-                                            👑 Kandy
-                                        </button>
-                                        <button type="button" onclick="selectRouteOrigin('galle')" id="btnSideOriginGalle" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
-                                            🏰 Galle
-                                        </button>
-                                        <button type="button" onclick="selectRouteOrigin('custom')" id="btnSideOriginCustom" class="side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50">
-                                            🎯 Pick Map
-                                        </button>
+                                        <div class="relative flex-1">
+                                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                                            <input type="text" id="startLocationInput" onkeydown="handleInputKeyDown(event, false)" oninput="handleStartLocationInput(this.value, false)" onfocus="handleStartLocationInput(this.value, false)" placeholder="Type city (e.g. Negombo, Matara)..." autocomplete="off" class="w-full pl-7 pr-3 py-1.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-blue-500 bg-white shadow-2xs font-semibold text-gray-800 placeholder-gray-400">
+                                            <div id="startLocationDropdown" style="display:none;" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-48 overflow-y-auto py-1"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1051,7 +1039,45 @@
         let currentActiveZoneTitle = '';
         const weatherCache = {};
 
-        // SRI LANKA ORIGIN HUBS FOR MEASURING ROUTE & DISTANCE
+        // SRI LANKA ORIGIN HUBS & TOWNS FOR DISTANCE & ROUTE MEASURING
+        const SRI_LANKA_TOWNS = [
+            { name: "Colombo", icon: "🏙️", lat: 6.9271, lng: 79.8612, district: "Western Province" },
+            { name: "Airport (BIA Katunayake)", icon: "✈️", lat: 7.1808, lng: 79.8841, district: "Katunayake" },
+            { name: "Negombo", icon: "🏖️", lat: 7.2088, lng: 79.8358, district: "Gampaha" },
+            { name: "Kandy", icon: "👑", lat: 7.2906, lng: 80.6337, district: "Central Province" },
+            { name: "Galle", icon: "🏰", lat: 6.0535, lng: 80.2210, district: "Southern Province" },
+            { name: "Ella", icon: "⛰️", lat: 6.8667, lng: 81.0466, district: "Badulla" },
+            { name: "Nuwara Eliya", icon: "🫖", lat: 6.9497, lng: 80.7891, district: "Central Highlands" },
+            { name: "Sigiriya", icon: "🦁", lat: 7.9570, lng: 80.7603, district: "Matale" },
+            { name: "Dambulla", icon: "🛕", lat: 7.8731, lng: 80.6517, district: "Matale" },
+            { name: "Mirissa", icon: "🐋", lat: 5.9482, lng: 80.4716, district: "Matara" },
+            { name: "Matara", icon: "🌊", lat: 5.9549, lng: 80.5550, district: "Southern Province" },
+            { name: "Unawatuna", icon: "🌴", lat: 6.0104, lng: 80.2494, district: "Galle" },
+            { name: "Bentota", icon: "🏄", lat: 6.4258, lng: 79.9997, district: "Galle" },
+            { name: "Hikkaduwa", icon: "🐢", lat: 6.1408, lng: 80.1009, district: "Galle" },
+            { name: "Anuradhapura", icon: "🏛️", lat: 8.3114, lng: 80.4037, district: "North Central" },
+            { name: "Polonnaruwa", icon: "🛕", lat: 7.9403, lng: 81.0188, district: "North Central" },
+            { name: "Trincomalee", icon: "🏖️", lat: 8.5874, lng: 81.2152, district: "Eastern Province" },
+            { name: "Jaffna", icon: "🏰", lat: 9.6615, lng: 80.0255, district: "Northern Province" },
+            { name: "Yala", icon: "🐆", lat: 6.3688, lng: 81.5204, district: "Hambantota" },
+            { name: "Udawalawe", icon: "🐘", lat: 6.4746, lng: 80.8987, district: "Ratnapura" },
+            { name: "Tangalle", icon: "🌴", lat: 6.0243, lng: 80.7941, district: "Hambantota" },
+            { name: "Hambantota", icon: "🚢", lat: 6.1429, lng: 81.1212, district: "Southern Province" },
+            { name: "Badulla", icon: "🚂", lat: 6.9934, lng: 81.0550, district: "Uva Province" },
+            { name: "Bandarawela", icon: "🌲", lat: 6.8294, lng: 80.9858, district: "Badulla" },
+            { name: "Kurunegala", icon: "🪨", lat: 7.4863, lng: 80.3623, district: "North Western" },
+            { name: "Ratnapura", icon: "💎", lat: 6.6828, lng: 80.4037, district: "Sabaragamuwa" },
+            { name: "Kalutara", icon: "🛕", lat: 6.5854, lng: 79.9607, district: "Western Province" },
+            { name: "Arugam Bay", icon: "🏄‍♂️", lat: 6.8415, lng: 81.8335, district: "Ampara" },
+            { name: "Batticaloa", icon: "🏖️", lat: 7.7310, lng: 81.6747, district: "Eastern Province" },
+            { name: "Pinnawala", icon: "🐘", lat: 7.3005, lng: 80.3869, district: "Kegalle" },
+            { name: "Chilaw", icon: "🦀", lat: 7.5758, lng: 79.7953, district: "Puttalam" },
+            { name: "Puttalam", icon: "🌊", lat: 8.0362, lng: 79.8283, district: "North Western" },
+            { name: "Kegalle", icon: "🌿", lat: 7.2513, lng: 80.3464, district: "Sabaragamuwa" },
+            { name: "Matale", icon: "🍃", lat: 7.4675, lng: 80.6234, district: "Central Province" },
+            { name: "Hatton", icon: "⛰️", lat: 6.8916, lng: 80.5960, district: "Nuwara Eliya" }
+        ];
+
         const ROUTE_ORIGIN_HUBS = {
             gps: { key: 'gps', name: 'My Current Location 📍', coords: null, isGps: true, chipLabel: '📍 My GPS' },
             colombo: { key: 'colombo', name: 'Colombo City (Fort) 🏙️', coords: [6.9271, 79.8612], chipLabel: '🏙️ Colombo' },
@@ -1061,6 +1087,9 @@
             custom: { key: 'custom', name: 'Custom Map Pin 🎯', coords: null, isCustom: true, chipLabel: '🎯 Pick Map' }
         };
         let selectedOriginKey = 'gps';
+        let currentOriginCoords = null;
+        let currentOriginLabel = '📍 My Location';
+        let locationSearchDebounce = null;
         let customPickedCoords = null;
         let isPickingOnMap = false;
         let toastTimeout = null;
@@ -1636,24 +1665,17 @@
             const timeText = document.getElementById('destRoadTimeText');
             if (!kmText || !destCoords) return;
 
-            let startCoords = null;
-            let startLabel = '';
+            let startCoords = currentOriginCoords;
+            let startLabel = currentOriginLabel || 'your location';
 
-            if (selectedOriginKey === 'gps') {
+            if (!startCoords) {
                 if (cachedUserGpsCoords) {
                     startCoords = cachedUserGpsCoords;
                     startLabel = 'your live location 📍';
                 } else {
-                    startCoords = ROUTE_ORIGIN_HUBS.colombo.coords;
-                    startLabel = 'Colombo (GPS pending)';
+                    startCoords = [6.9271, 79.8612];
+                    startLabel = 'Colombo (Click My Location for GPS)';
                 }
-            } else if (selectedOriginKey === 'custom' && customPickedCoords) {
-                startCoords = customPickedCoords;
-                startLabel = 'custom map pin 🎯';
-            } else {
-                const hub = ROUTE_ORIGIN_HUBS[selectedOriginKey] || ROUTE_ORIGIN_HUBS.colombo;
-                startCoords = hub.coords || [6.9271, 79.8612];
-                startLabel = hub.name;
             }
 
             const dLat = (destCoords[0] - startCoords[0]) * 111;
@@ -1827,97 +1849,194 @@
             }
         }
 
-        function updateOriginButtonsUI(key) {
-            selectedOriginKey = key;
+        function useMyLocation() {
+            activeOriginMode = 'gps';
+            currentOriginCoords = cachedUserGpsCoords;
+            currentOriginLabel = '📍 My Location';
 
-            const sideBtnIds = {
-                gps: 'btnSideOriginGps',
-                colombo: 'btnSideOriginColombo',
-                airport: 'btnSideOriginAirport',
-                kandy: 'btnSideOriginKandy',
-                galle: 'btnSideOriginGalle',
-                custom: 'btnSideOriginCustom'
-            };
-            Object.keys(sideBtnIds).forEach(function(k) {
-                const btn = document.getElementById(sideBtnIds[k]);
-                if (!btn) return;
-                if (k === key) {
-                    btn.className = 'side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-blue-600 text-white shadow-2xs font-bold';
-                } else {
-                    btn.className = 'side-origin-btn py-1 px-1 rounded-lg text-center cursor-pointer transition bg-white text-gray-700 border border-gray-200 hover:bg-gray-50';
-                }
-            });
+            const sideInput = document.getElementById('startLocationInput');
+            const cardInput = document.getElementById('cardStartLocationInput');
+            if (sideInput) sideInput.value = '';
+            if (cardInput) cardInput.value = '';
 
-            const cardBtnIds = {
-                gps: 'btnCardOriginGps',
-                colombo: 'btnCardOriginColombo',
-                airport: 'btnCardOriginAirport',
-                kandy: 'btnCardOriginKandy',
-                galle: 'btnCardOriginGalle',
-                custom: 'btnCardOriginCustom'
-            };
-            Object.keys(cardBtnIds).forEach(function(k) {
-                const btn = document.getElementById(cardBtnIds[k]);
-                if (!btn) return;
-                if (k === key) {
-                    btn.className = 'origin-btn px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-xs whitespace-nowrap cursor-pointer transition font-bold';
-                } else {
-                    btn.className = 'origin-btn px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap cursor-pointer transition';
-                }
-            });
+            const sideLabel = document.getElementById('activeOriginLabel');
+            if (sideLabel) sideLabel.textContent = '📍 My Location';
+            const cardBadge = document.getElementById('routeOriginStatusBadge');
+            if (cardBadge) cardBadge.textContent = '📍 My Location';
 
-            const labelEl = document.getElementById('activeOriginLabel');
-            if (labelEl) {
-                const hub = ROUTE_ORIGIN_HUBS[key];
-                labelEl.textContent = hub ? hub.chipLabel : '📍 Custom';
-            }
-        }
+            updateMyLocationButtons(true);
+            closeAllLocationDropdowns();
 
-        function selectRouteOrigin(key) {
-            selectedOriginKey = key;
-            activeOriginMode = key;
-            updateOriginButtonsUI(key);
-
-            if (key === 'gps') {
-                isPickingOnMap = false;
-                const mapEl = document.getElementById('sriLankaMap');
-                if (mapEl) mapEl.style.cursor = '';
-                showMapToast('📍 Detecting your live location via GPS...');
-                getUserGpsLocation(function(coords, label) {
-                    if (currentTargetCoords) {
-                        calculateAndDrawRoute(currentTargetCoords, currentTargetName, coords, label);
-                    }
-                    if (currentSelectedSpot) {
-                        updateSpotDistancePreview(currentSelectedSpot.coords);
-                    }
-                });
-                return;
-            }
-
-            if (key === 'custom') {
-                isPickingOnMap = true;
-                const mapEl = document.getElementById('sriLankaMap');
-                if (mapEl) mapEl.style.cursor = 'crosshair';
-                showMapToast('🎯 Click anywhere on the map to set your starting point!');
-                return;
-            }
-
-            isPickingOnMap = false;
-            const mapEl = document.getElementById('sriLankaMap');
-            if (mapEl) mapEl.style.cursor = '';
-
-            const hub = ROUTE_ORIGIN_HUBS[key];
-            if (hub && hub.coords) {
-                showMapToast('🛣️ Calculating route from ' + hub.name);
+            showMapToast('📍 Detecting your live location via GPS...');
+            getUserGpsLocation(function(coords, label) {
+                currentOriginCoords = coords;
+                currentOriginLabel = 'My Current Location 📍';
                 if (currentTargetCoords) {
-                    calculateAndDrawRoute(currentTargetCoords, currentTargetName, hub.coords, hub.name);
+                    calculateAndDrawRoute(currentTargetCoords, currentTargetName, coords, label);
                 }
                 if (currentSelectedSpot) {
                     updateSpotDistancePreview(currentSelectedSpot.coords);
                 }
+            });
+        }
+
+        function updateMyLocationButtons(isGpsActive) {
+            const sideBtn = document.getElementById('btnSidePickMyLocation');
+            const cardBtn = document.getElementById('btnCardPickMyLocation');
+            [sideBtn, cardBtn].forEach(function(btn) {
+                if (!btn) return;
+                if (isGpsActive) {
+                    btn.className = 'py-1.5 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer flex-shrink-0 shadow-2xs';
+                } else {
+                    btn.className = 'py-1.5 px-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer flex-shrink-0 shadow-2xs';
+                }
+            });
+        }
+
+        function closeAllLocationDropdowns() {
+            const sideDrop = document.getElementById('startLocationDropdown');
+            const cardDrop = document.getElementById('cardLocationDropdown');
+            if (sideDrop) sideDrop.style.display = 'none';
+            if (cardDrop) cardDrop.style.display = 'none';
+        }
+
+        function handleStartLocationInput(query, isCard) {
+            const dropdown = document.getElementById(isCard ? 'cardLocationDropdown' : 'startLocationDropdown');
+            if (!dropdown) return;
+
+            const trimmed = (query || '').trim().toLowerCase();
+            let matches = [];
+            if (!trimmed) {
+                matches = SRI_LANKA_TOWNS.slice(0, 8);
+            } else {
+                matches = SRI_LANKA_TOWNS.filter(function(t) {
+                    return t.name.toLowerCase().includes(trimmed) || (t.district && t.district.toLowerCase().includes(trimmed));
+                });
+            }
+
+            if (matches.length === 0) {
+                dropdown.innerHTML = `
+                    <div class="px-3 py-2 text-xs text-gray-500 flex items-center justify-between">
+                        <span>Searching map for "${query}"...</span>
+                    </div>
+                `;
+                dropdown.style.display = 'block';
+
+                if (trimmed.length >= 2) {
+                    clearTimeout(locationSearchDebounce);
+                    locationSearchDebounce = setTimeout(function() {
+                        fetchNominatimTowns(trimmed, isCard);
+                    }, 400);
+                }
+                return;
+            }
+
+            renderTownSuggestions(matches, isCard);
+        }
+
+        function renderTownSuggestions(towns, isCard) {
+            const dropdown = document.getElementById(isCard ? 'cardLocationDropdown' : 'startLocationDropdown');
+            if (!dropdown) return;
+
+            dropdown.innerHTML = towns.map(function(t) {
+                const escapedName = t.name.replace(/'/g, "\\'");
+                return `
+                    <button type="button" 
+                            onmousedown="selectTownSuggestion('${escapedName}', ${t.lat}, ${t.lng})" 
+                            class="w-full text-left px-3 py-1.5 hover:bg-blue-50 text-xs flex items-center justify-between transition cursor-pointer border-b border-gray-100 last:border-b-0">
+                        <span class="font-bold text-gray-800 flex items-center gap-1.5">
+                            <span>${t.icon || '📍'}</span>
+                            <span>${t.name}</span>
+                        </span>
+                        <span class="text-[10px] text-gray-400 font-medium">${t.district || 'Sri Lanka'}</span>
+                    </button>
+                `;
+            }).join('');
+
+            dropdown.style.display = 'block';
+        }
+
+        function selectTownSuggestion(name, lat, lng) {
+            activeOriginMode = 'city';
+            currentOriginCoords = [lat, lng];
+            currentOriginLabel = name;
+
+            const sideInput = document.getElementById('startLocationInput');
+            const cardInput = document.getElementById('cardStartLocationInput');
+            if (sideInput) sideInput.value = name;
+            if (cardInput) cardInput.value = name;
+
+            const sideLabel = document.getElementById('activeOriginLabel');
+            if (sideLabel) sideLabel.textContent = name;
+            const cardBadge = document.getElementById('routeOriginStatusBadge');
+            if (cardBadge) cardBadge.textContent = name;
+
+            updateMyLocationButtons(false);
+            closeAllLocationDropdowns();
+
+            showMapToast(`🛣️ Origin set to ${name}`);
+
+            if (currentTargetCoords) {
+                calculateAndDrawRoute(currentTargetCoords, currentTargetName, currentOriginCoords, currentOriginLabel);
+            }
+            if (currentSelectedSpot) {
+                updateSpotDistancePreview(currentSelectedSpot.coords);
             }
         }
 
+        async function fetchNominatimTowns(query, isCard) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=lk&limit=5&q=${encodeURIComponent(query)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const results = data.map(function(item) {
+                        const shortName = item.display_name.split(',')[0];
+                        return {
+                            name: shortName,
+                            icon: '📍',
+                            lat: parseFloat(item.lat),
+                            lng: parseFloat(item.lon),
+                            district: item.display_name.split(',').slice(1, 3).join(',').trim()
+                        };
+                    });
+                    renderTownSuggestions(results, isCard);
+                }
+            } catch (e) {
+                console.warn('Geocoding search error:', e);
+            }
+        }
+
+        function handleInputKeyDown(e, isCard) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const dropdown = document.getElementById(isCard ? 'cardLocationDropdown' : 'startLocationDropdown');
+                if (dropdown) {
+                    const firstBtn = dropdown.querySelector('button');
+                    if (firstBtn) {
+                        firstBtn.dispatchEvent(new MouseEvent('mousedown'));
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#startLocationInput') && !e.target.closest('#startLocationDropdown') &&
+                !e.target.closest('#cardStartLocationInput') && !e.target.closest('#cardLocationDropdown')) {
+                closeAllLocationDropdowns();
+            }
+        });
+
+        // Backward compatibility
+        function updateOriginButtonsUI(key) {}
+        function selectRouteOrigin(key) {
+            if (key === 'gps') {
+                useMyLocation();
+            } else if (ROUTE_ORIGIN_HUBS[key] && ROUTE_ORIGIN_HUBS[key].coords) {
+                const h = ROUTE_ORIGIN_HUBS[key];
+                selectTownSuggestion(h.name, h.coords[0], h.coords[1]);
+            }
+        }
         function switchRouteOrigin(mode) {
             selectRouteOrigin(mode);
         }
@@ -1961,28 +2080,26 @@
             clearActiveRoute();
 
             // Determine origin coordinates
-            let originCoords = forceOriginCoords;
-            let originLabel = forceOriginLabel;
+            let originCoords = forceOriginCoords || currentOriginCoords;
+            let originLabel = forceOriginLabel || currentOriginLabel;
 
             if (!originCoords) {
-                if (selectedOriginKey === 'gps') {
+                if (activeOriginMode === 'gps' || !activeOriginMode) {
                     if (cachedUserGpsCoords) {
                         originCoords = cachedUserGpsCoords;
                         originLabel = 'My Current Location 📍';
                     } else {
                         if (startTitleEl) startTitleEl.textContent = 'From: Detecting your GPS location...';
                         getUserGpsLocation(function(c, lbl) {
+                            currentOriginCoords = c;
+                            currentOriginLabel = lbl;
                             calculateAndDrawRoute(destCoords, destName, c, lbl);
                         });
                         return;
                     }
-                } else if (selectedOriginKey === 'custom' && customPickedCoords) {
-                    originCoords = customPickedCoords;
-                    originLabel = 'Custom Map Pin 🎯';
                 } else {
-                    const hub = ROUTE_ORIGIN_HUBS[selectedOriginKey] || ROUTE_ORIGIN_HUBS.colombo;
-                    originCoords = hub.coords || [6.9271, 79.8612];
-                    originLabel = hub.name || 'Colombo City 🏙️';
+                    originCoords = [6.9271, 79.8612];
+                    originLabel = 'Colombo City 🏙️';
                 }
             }
 
