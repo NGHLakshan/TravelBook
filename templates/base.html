@@ -208,72 +208,76 @@
             cursor: pointer;
             user-select: none;
             transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
         }
         .spot-marker-container:hover {
             transform: translate(-50%, -50%) scale(1.18);
             z-index: 99999 !important;
         }
         .spot-pin-bubble {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: #ffffff;
-            border: 2px solid #FF5B00;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+            border: 2.5px solid #FF5B00;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 15px;
             transition: all 0.2s ease;
         }
         .spot-marker-container:hover .spot-pin-bubble {
             background: #FF5B00;
             color: #ffffff;
             border-color: #ffffff;
-            box-shadow: 0 6px 18px rgba(255, 91, 0, 0.55);
+            box-shadow: 0 6px 18px rgba(255, 91, 0, 0.6);
+            transform: scale(1.1);
+        }
+        .spot-marker-container.active-spot {
+            z-index: 10000 !important;
         }
         .spot-marker-container.active-spot .spot-pin-bubble {
             background: #FF5B00;
             color: #ffffff;
             border-color: #ffffff;
             box-shadow: 0 0 0 4px rgba(255, 91, 0, 0.35), 0 8px 20px rgba(255, 91, 0, 0.6);
-            transform: scale(1.15);
+            transform: scale(1.18);
         }
         .spot-pin-label {
-            margin-top: 3px;
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(4px);
+            display: none; /* Clean POI mode: Hidden by default so nearby places never stack or overlap */
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 4px;
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(6px);
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            padding: 2px 7px;
+            padding: 2.5px 8px;
             border-radius: 9999px;
             white-space: nowrap;
-            max-width: 140px;
+            max-width: 170px;
             overflow: hidden;
             text-overflow: ellipsis;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
             transition: all 0.2s ease;
             pointer-events: none;
+            z-index: 999;
         }
+        /* Show full badge ONLY for active spot or hovered spot */
         .spot-marker-container:hover .spot-pin-label,
         .spot-marker-container.active-spot .spot-pin-label {
+            display: inline-block !important;
             background: #FF5B00 !important;
             border-color: #ffffff !important;
-            color: #ffffff;
-            font-weight: 900;
-            box-shadow: 0 4px 14px rgba(255, 91, 0, 0.5);
-            display: inline-block !important;
+            color: #ffffff !important;
+            font-weight: 900 !important;
+            box-shadow: 0 6px 18px rgba(255, 91, 0, 0.6) !important;
             z-index: 99999 !important;
-        }
-        /* When zoom is compact (< 12), hide labels so nearby places never clump or overlap */
-        .zoom-compact .spot-pin-label {
-            display: none !important;
-        }
-        .zoom-compact .spot-marker-container:hover .spot-pin-label,
-        .zoom-compact .spot-marker-container.active-spot .spot-pin-label {
-            display: inline-block !important;
         }
     </style>
     {% block extra_head %}{% endblock %}
@@ -819,21 +823,18 @@
                 btnText: "Explore Kandy & Hill Experiences ➔",
                 waQuery: "Kandy and the Central Hill Country",
                 spots: [
-                    { name: "Kandy Temple of the Tooth", type: "UNESCO Sacred Relic", coords: [7.2936, 80.6413], icon: "👑" },
+                    { name: "Kandy Temple of the Tooth", type: "UNESCO Sacred Relic & Palace", coords: [7.2936, 80.6413], icon: "👑" },
                     { name: "Kandy Lake", type: "Royal Scenic Lake", coords: [7.2906, 80.6385], icon: "🌊" },
-                    { name: "Arthur’s Seat, Kandy", type: "Panoramic City Lookout", coords: [7.2870, 80.6360], icon: "🔭" },
-                    { name: "Kandy View Point", type: "Hill Viewpoint", coords: [7.2865, 80.6375], icon: "🌅" },
+                    { name: "Kandy View Point (Arthur’s Seat)", type: "Panoramic City Lookout", coords: [7.2865, 80.6375], icon: "🌅" },
                     { name: "Bahiravokanda Vihara Buddha Statue", type: "Colossal White Buddha", coords: [7.2965, 80.6277], icon: "☸️" },
-                    { name: "Royal Palace of Kandy", type: "Last Kingdom Palace", coords: [7.2945, 80.6420], icon: "🏛️" },
-                    { name: "International Buddhist Museum", type: "World Buddhist Culture", coords: [7.2938, 80.6425], icon: "🏛️" },
+                    { name: "Udawattakele Forest Reserve", type: "Royal Sanctuary Forest", coords: [7.3005, 80.6440], icon: "🌳" },
+                    { name: "Ceylon Tea Museum (Hantana)", type: "Historic Tea Factory & Museum", coords: [7.2650, 80.6270], icon: "🫖" },
                     { name: "Royal Botanic Gardens (Peradeniya)", type: "Botanical Canopy & Orchids", coords: [7.2717, 80.5956], icon: "🌸" },
-                    { name: "Udawattakele Forest Reserve", type: "Royal Sanctuary Forest", coords: [7.2989, 80.6433], icon: "🌳" },
                     { name: "Embekke Dewalaya", type: "Ancient Wood Carvings", coords: [7.2183, 80.5678], icon: "🪵" },
+                    { name: "Gadaladeniya Temple", type: "South Indian Rock Architecture", coords: [7.2580, 80.5560], icon: "🛕" },
                     { name: "Knuckles Mountain Range", type: "Cloud Forest Trekking", coords: [7.4667, 80.7833], icon: "⛰️" },
                     { name: "Adam’s Peak (Sri Pada)", type: "Sacred Sunrise Pilgrimage", coords: [6.8096, 80.4994], icon: "🌄" },
-                    { name: "Dhowa Rock Temple", type: "Historic Mahayana Carving", coords: [6.8678, 81.0125], icon: "🛕" },
-                    { name: "Mahiyanganaya Sorabora Lake", type: "Ancient Water Reservoir", coords: [7.3200, 81.0250], icon: "⛵" },
-                    { name: "Rose Quartz Mountain", type: "Pink Quartz Forest Ridge", coords: [7.0500, 80.6000], icon: "💎" }
+                    { name: "Mahiyanganaya Sorabora Lake", type: "Ancient Water Reservoir", coords: [7.3200, 81.0250], icon: "⛵" }
                 ]
             },
             ella_nuwara_eliya: {
@@ -1373,6 +1374,8 @@
             "World’s End": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
             "Kandy Temple of the Tooth": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
             "Kandy Lake": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
+            "Kandy View Point (Arthur’s Seat)": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
+            "Ceylon Tea Museum (Hantana)": "https://images.unsplash.com/photo-1588598198321-9735fd52455f?auto=format&fit=crop&w=800&q=80",
             "Royal Botanic Gardens (Peradeniya)": "https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=800&q=80",
             "Knuckles Mountain Range": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
             "Adam’s Peak (Sri Pada)": "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80",
