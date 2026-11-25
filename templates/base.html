@@ -2045,6 +2045,45 @@
         }
 
         function getDirectionsForCurrentSpot() {
+            // Read whatever the user typed in the input boxes (may not have been dropdown-selected)
+            const sideInputVal = (document.getElementById('startLocationInput') || {}).value || '';
+            const cardInputVal = (document.getElementById('cardStartLocationInput') || {}).value || '';
+            const typedCity = (sideInputVal || cardInputVal).trim();
+
+            // If a city was typed but not yet set via dropdown click, resolve it now
+            if (typedCity && (!currentOriginCoords || currentOriginLabel !== typedCity)) {
+                // Try exact/partial match in local towns list first
+                const matched = SRI_LANKA_TOWNS.find(function(t) {
+                    return t.name.toLowerCase() === typedCity.toLowerCase() ||
+                           t.name.toLowerCase().startsWith(typedCity.toLowerCase());
+                });
+                if (matched) {
+                    // Set origin synchronously and then draw route
+                    selectTownSuggestion(matched.name, matched.lat, matched.lng);
+                    return; // selectTownSuggestion calls calculateAndDrawRoute internally when target exists
+                }
+                // Not in local list → geocode via Nominatim then draw route
+                showMapToast('🔍 Geocoding "' + typedCity + '"...');
+                fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=lk&limit=1&q=' + encodeURIComponent(typedCity))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data && data.length > 0) {
+                            const item = data[0];
+                            const name = item.display_name.split(',')[0];
+                            selectTownSuggestion(name, parseFloat(item.lat), parseFloat(item.lon));
+                        } else {
+                            showMapToast('⚠️ Location not found. Using GPS or default.');
+                            _doGetDirections();
+                        }
+                    })
+                    .catch(function() { _doGetDirections(); });
+                return;
+            }
+
+            _doGetDirections();
+        }
+
+        function _doGetDirections() {
             // Always pass current selected origin so route starts from typed city or My Location
             const originCoords = currentOriginCoords || (activeOriginMode === 'gps' ? cachedUserGpsCoords : null) || null;
             const originLabel = currentOriginLabel || null;
