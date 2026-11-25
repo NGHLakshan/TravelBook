@@ -595,6 +595,11 @@
                                     <div id="cardLocationDropdown" style="display:none;" class="absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-52 overflow-y-auto py-1"></div>
                                 </div>
                             </div>
+                            <!-- Pick on Map (card) -->
+                            <button type="button" onclick="startMapPickMode()" class="w-full mt-0.5 py-1.5 px-3 rounded-xl border border-dashed border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-700 font-extrabold text-[11px] transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                                <span>🗺️ Pick Starting Point on Map</span>
+                            </button>
                         </div>
 
                         <!-- Real Road Distance & Time Banner -->
@@ -710,6 +715,11 @@
                                             <div id="startLocationDropdown" style="display:none;" class="absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-52 overflow-y-auto py-1"></div>
                                         </div>
                                     </div>
+                                    <!-- Pick on Map (sidebar) -->
+                                    <button type="button" onclick="startMapPickMode()" class="w-full mt-1 py-1.5 px-3 rounded-xl border border-dashed border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-700 font-extrabold text-[11px] transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                        <span>🗺️ Pick Starting Point on Map</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1306,10 +1316,26 @@
                     if (mapEl) mapEl.style.cursor = '';
 
                     customPickedCoords = [e.latlng.lat, e.latlng.lng];
-                    const label = 'Custom Map Pin 🎯';
+                    const label = '🎯 Picked Location';
 
-                    showMapToast('📍 Starting location set from map!');
-                    updateOriginButtonsUI('custom');
+                    // Update origin state
+                    currentOriginCoords = customPickedCoords;
+                    currentOriginLabel = label;
+
+                    // Update both input fields to show picked label
+                    const sideInput = document.getElementById('startLocationInput');
+                    const cardInput = document.getElementById('cardStartLocationInput');
+                    if (sideInput) sideInput.value = label;
+                    if (cardInput) cardInput.value = label;
+                    toggleClearOriginButtons(true);
+
+                    // Update status badges
+                    const badge1 = document.getElementById('activeOriginLabel');
+                    const badge2 = document.getElementById('routeOriginStatusBadge');
+                    if (badge1) badge1.textContent = label;
+                    if (badge2) badge2.textContent = label;
+
+                    showMapToast('📍 Starting location pinned on map! Now click Get Driving Route.');
 
                     if (currentTargetCoords) {
                         calculateAndDrawRoute(currentTargetCoords, currentTargetName, customPickedCoords, label);
@@ -2241,6 +2267,19 @@
                 closeAllLocationDropdowns();
             }
         });
+
+        // ==========================================
+        // PICK ON MAP - Let user tap any point as origin
+        // ==========================================
+        function startMapPickMode() {
+            isPickingOnMap = true;
+            const mapEl = document.getElementById('sriLankaMap');
+            if (mapEl) mapEl.style.cursor = 'crosshair';
+            // Close any open dropdowns
+            closeAllLocationDropdowns();
+            // Show instruction toast
+            showMapToast('🗺️ Click anywhere on the map to set your starting point!');
+        }
 
         // Backward compatibility
         function updateOriginButtonsUI(key) {}
