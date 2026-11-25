@@ -1854,7 +1854,7 @@
 
         function useMyLocation() {
             activeOriginMode = 'gps';
-            currentOriginCoords = cachedUserGpsCoords;
+            currentOriginCoords = cachedUserGpsCoords; // may be null until GPS resolves
             currentOriginLabel = '📍 My Location';
 
             const sideInput = document.getElementById('startLocationInput');
@@ -2045,13 +2045,17 @@
         }
 
         function getDirectionsForCurrentSpot() {
+            // Always pass current selected origin so route starts from typed city or My Location
+            const originCoords = currentOriginCoords || (activeOriginMode === 'gps' ? cachedUserGpsCoords : null) || null;
+            const originLabel = currentOriginLabel || null;
+
             if (currentTargetCoords) {
-                calculateAndDrawRoute(currentTargetCoords, currentTargetName || 'Destination');
+                calculateAndDrawRoute(currentTargetCoords, currentTargetName || 'Destination', originCoords, originLabel);
             } else if (currentActiveZoneCoords) {
-                calculateAndDrawRoute(currentActiveZoneCoords, currentActiveZoneTitle || 'Destination');
+                calculateAndDrawRoute(currentActiveZoneCoords, currentActiveZoneTitle || 'Destination', originCoords, originLabel);
             } else if (SRI_LANKA_REGIONS_DATA[activeZoneKey]) {
                 const reg = SRI_LANKA_REGIONS_DATA[activeZoneKey];
-                calculateAndDrawRoute(reg.coords, reg.title);
+                calculateAndDrawRoute(reg.coords, reg.title, originCoords, originLabel);
             }
         }
 
@@ -2082,27 +2086,25 @@
 
             clearActiveRoute();
 
-            // Determine origin coordinates
+            // Determine origin: use forced coords → current saved origin → GPS cache → prompt GPS
             let originCoords = forceOriginCoords || currentOriginCoords;
-            let originLabel = forceOriginLabel || currentOriginLabel;
+            let originLabel = forceOriginLabel || currentOriginLabel || '📍 My Location';
 
             if (!originCoords) {
-                if (activeOriginMode === 'gps' || !activeOriginMode) {
-                    if (cachedUserGpsCoords) {
-                        originCoords = cachedUserGpsCoords;
-                        originLabel = 'My Current Location 📍';
-                    } else {
-                        if (startTitleEl) startTitleEl.textContent = 'From: Detecting your GPS location...';
-                        getUserGpsLocation(function(c, lbl) {
-                            currentOriginCoords = c;
-                            currentOriginLabel = lbl;
-                            calculateAndDrawRoute(destCoords, destName, c, lbl);
-                        });
-                        return;
-                    }
+                // No origin set yet — try GPS
+                if (cachedUserGpsCoords) {
+                    originCoords = cachedUserGpsCoords;
+                    originLabel = 'My Current Location 📍';
+                    currentOriginCoords = originCoords;
+                    currentOriginLabel = originLabel;
                 } else {
-                    originCoords = [6.9271, 79.8612];
-                    originLabel = 'Colombo City 🏙️';
+                    if (startTitleEl) startTitleEl.textContent = 'From: Detecting your GPS location...';
+                    getUserGpsLocation(function(c, lbl) {
+                        currentOriginCoords = c;
+                        currentOriginLabel = lbl;
+                        calculateAndDrawRoute(destCoords, destName, c, lbl);
+                    });
+                    return;
                 }
             }
 
