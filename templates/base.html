@@ -198,6 +198,13 @@
             65% { box-shadow: 0 0 0 14px rgba(255, 91, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 91, 0, 0); }
         }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
 
         /* LOCAL SPOT PINS (Clean, Separated Google Maps / POI Style) */
         .spot-marker-container {
@@ -1915,16 +1922,14 @@
                     },
                     function(err) {
                         console.warn('Geolocation denied or unavailable:', err);
-                        showMapToast('📍 GPS not detected. Calculating from Colombo (or pick a city below)!');
-                        const defaultHub = ROUTE_ORIGIN_HUBS.colombo;
-                        if (callback) callback(defaultHub.coords, defaultHub.name);
+                        showMapToast('⚠️ GPS not available. Please search a city or Pick on Map to set your start!');
+                        if (callback) callback(null, null);
                     },
                     { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
                 );
             } else {
-                showMapToast('📍 Browser GPS not supported. Defaulting to Colombo!');
-                const defaultHub = ROUTE_ORIGIN_HUBS.colombo;
-                if (callback) callback(defaultHub.coords, defaultHub.name);
+                showMapToast('⚠️ Browser GPS not supported. Please search a city or Pick on Map!');
+                if (callback) callback(null, null);
             }
         }
 
@@ -2306,7 +2311,40 @@
                 return;
             }
 
+            // BLOCK: No origin set at all — user must pick one first
+            const hasOrigin = currentOriginCoords || cachedUserGpsCoords || typedCity;
+            if (!hasOrigin) {
+                _promptSelectOrigin();
+                return;
+            }
+
             _doGetDirections();
+        }
+
+        function _promptSelectOrigin() {
+            showMapToast('⚠️ Please select your starting location first — use My Location, search a city, or Pick on Map!');
+            // Visually highlight the origin selector row in both sidebar and card
+            ['destRoadDistanceCard', 'mapRouteCard'].forEach(function(panelId) {
+                const panel = document.getElementById(panelId);
+                if (!panel || panel.style.display === 'none') return;
+                // Find the origin row inside this panel
+                const inputs = panel.querySelectorAll('#startLocationInput, #cardStartLocationInput');
+                inputs.forEach(function(inp) {
+                    const row = inp.closest('.flex.items-center.gap-1\\.5') || inp.closest('.space-y-1\\.5') || inp.parentElement;
+                    if (row) {
+                        row.style.outline = '2.5px solid #ef4444';
+                        row.style.borderRadius = '12px';
+                        row.style.animation = 'shake 0.4s ease';
+                        setTimeout(function() {
+                            row.style.outline = '';
+                            row.style.animation = '';
+                        }, 2000);
+                    }
+                });
+            });
+            // Scroll/focus the first visible input
+            const inp = document.getElementById('startLocationInput') || document.getElementById('cardStartLocationInput');
+            if (inp) { inp.focus(); inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
         }
 
         function _doGetDirections() {
@@ -2351,7 +2389,7 @@
 
             clearActiveRoute();
 
-            // Determine origin: use forced coords → current saved origin → GPS cache → prompt GPS
+            // Determine origin: use forced coords → current saved origin → GPS cache → prompt user
             let originCoords = forceOriginCoords || currentOriginCoords;
             let originLabel = forceOriginLabel || currentOriginLabel || '📍 My Location';
 
@@ -2365,6 +2403,12 @@
                 } else {
                     if (startTitleEl) startTitleEl.textContent = 'From: Detecting your GPS location...';
                     getUserGpsLocation(function(c, lbl) {
+                        if (!c) {
+                            // GPS failed — ask user to pick manually
+                            if (card) card.style.display = 'none';
+                            _promptSelectOrigin();
+                            return;
+                        }
                         currentOriginCoords = c;
                         currentOriginLabel = lbl;
                         calculateAndDrawRoute(destCoords, destName, c, lbl);
