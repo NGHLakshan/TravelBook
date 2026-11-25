@@ -588,8 +588,11 @@
                                 </button>
                                 <div class="relative flex-1">
                                     <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
-                                    <input type="text" id="cardStartLocationInput" onkeydown="handleInputKeyDown(event, true)" oninput="handleStartLocationInput(this.value, true)" onfocus="handleStartLocationInput(this.value, true)" placeholder="Type starting city (e.g. Kandy, Galle)..." autocomplete="off" class="w-full pl-7 pr-3 py-1.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-blue-500 bg-white shadow-2xs font-semibold text-gray-800 placeholder-gray-400">
-                                    <div id="cardLocationDropdown" style="display:none;" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-44 overflow-y-auto py-1"></div>
+                                    <input type="text" id="cardStartLocationInput" onkeydown="handleInputKeyDown(event, true)" oninput="handleStartLocationInput(this.value, true)" onfocus="handleStartLocationInput(this.value, true)" placeholder="Search any city/town (e.g. Haputale, Kandy)..." autocomplete="off" class="w-full pl-7 pr-7 py-1.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-blue-500 bg-white shadow-2xs font-semibold text-gray-800 placeholder-gray-400">
+                                    <button type="button" id="btnClearCardOrigin" onclick="clearTypedOrigin()" style="display:none;" title="Clear" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-xs cursor-pointer">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </button>
+                                    <div id="cardLocationDropdown" style="display:none;" class="absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-52 overflow-y-auto py-1"></div>
                                 </div>
                             </div>
                         </div>
@@ -700,8 +703,11 @@
                                         </button>
                                         <div class="relative flex-1">
                                             <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
-                                            <input type="text" id="startLocationInput" onkeydown="handleInputKeyDown(event, false)" oninput="handleStartLocationInput(this.value, false)" onfocus="handleStartLocationInput(this.value, false)" placeholder="Type city (e.g. Negombo, Matara)..." autocomplete="off" class="w-full pl-7 pr-3 py-1.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-blue-500 bg-white shadow-2xs font-semibold text-gray-800 placeholder-gray-400">
-                                            <div id="startLocationDropdown" style="display:none;" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-48 overflow-y-auto py-1"></div>
+                                            <input type="text" id="startLocationInput" onkeydown="handleInputKeyDown(event, false)" oninput="handleStartLocationInput(this.value, false)" onfocus="handleStartLocationInput(this.value, false)" placeholder="Search any city/town (e.g. Haputale, Galle)..." autocomplete="off" class="w-full pl-7 pr-7 py-1.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-blue-500 bg-white shadow-2xs font-semibold text-gray-800 placeholder-gray-400">
+                                            <button type="button" id="btnClearSideOrigin" onclick="clearTypedOrigin()" style="display:none;" title="Clear" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-xs cursor-pointer">
+                                                <i class="fa-solid fa-circle-xmark"></i>
+                                            </button>
+                                            <div id="startLocationDropdown" style="display:none;" class="absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[1050] max-h-52 overflow-y-auto py-1"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1076,7 +1082,51 @@
             { name: "Puttalam", icon: "🌊", lat: 8.0362, lng: 79.8283, district: "North Western" },
             { name: "Kegalle", icon: "🌿", lat: 7.2513, lng: 80.3464, district: "Sabaragamuwa" },
             { name: "Matale", icon: "🍃", lat: 7.4675, lng: 80.6234, district: "Central Province" },
-            { name: "Hatton", icon: "⛰️", lat: 6.8916, lng: 80.5960, district: "Nuwara Eliya" }
+            { name: "Hatton", icon: "⛰️", lat: 6.8916, lng: 80.5960, district: "Nuwara Eliya" },
+            { name: "Haputale", icon: "⛰️", lat: 6.7681, lng: 80.9594, district: "Badulla" },
+            { name: "Welimada", icon: "🥬", lat: 6.9006, lng: 80.9142, district: "Badulla" },
+            { name: "Diyatalawa", icon: "🌲", lat: 6.8153, lng: 80.9553, district: "Badulla" },
+            { name: "Wellawaya", icon: "🌿", lat: 6.7372, lng: 81.1025, district: "Monaragala" },
+            { name: "Monaragala", icon: "🌾", lat: 6.8728, lng: 81.3507, district: "Uva Province" },
+            { name: "Kataragama", icon: "🙏", lat: 6.4135, lng: 81.3346, district: "Monaragala" },
+            { name: "Tissamaharama", icon: "🐆", lat: 6.2792, lng: 81.2877, district: "Hambantota" },
+            { name: "Weligama", icon: "🏄", lat: 5.9750, lng: 80.4297, district: "Matara" },
+            { name: "Ahangama", icon: "🌊", lat: 5.9739, lng: 80.3614, district: "Galle" },
+            { name: "Ambalangoda", icon: "🎭", lat: 6.2355, lng: 80.0538, district: "Galle" },
+            { name: "Beruwala", icon: "🏖️", lat: 6.4788, lng: 79.9828, district: "Kalutara" },
+            { name: "Aluthgama", icon: "🌴", lat: 6.4333, lng: 80.0000, district: "Kalutara" },
+            { name: "Panadura", icon: "🌊", lat: 6.7132, lng: 79.9026, district: "Kalutara" },
+            { name: "Moratuwa", icon: "🏘️", lat: 6.7730, lng: 79.8816, district: "Colombo" },
+            { name: "Dehiwala", icon: "🦁", lat: 6.8567, lng: 79.8650, district: "Colombo" },
+            { name: "Nugegoda", icon: "🏙️", lat: 6.8649, lng: 79.8997, district: "Colombo" },
+            { name: "Maharagama", icon: "🏙️", lat: 6.8480, lng: 79.9265, district: "Colombo" },
+            { name: "Homagama", icon: "🏘️", lat: 6.8440, lng: 80.0024, district: "Colombo" },
+            { name: "Malabe", icon: "🎓", lat: 6.9061, lng: 79.9619, district: "Colombo" },
+            { name: "Kaduwela", icon: "🌉", lat: 6.9333, lng: 79.9833, district: "Colombo" },
+            { name: "Kadawatha", icon: "🛣️", lat: 7.0019, lng: 79.9525, district: "Gampaha" },
+            { name: "Gampaha", icon: "🌿", lat: 7.0917, lng: 79.9942, district: "Western Province" },
+            { name: "Wattala", icon: "🏙️", lat: 6.9892, lng: 79.8917, district: "Gampaha" },
+            { name: "Ja-Ela", icon: "🛣️", lat: 7.0744, lng: 79.8919, district: "Gampaha" },
+            { name: "Katunayake", icon: "✈️", lat: 7.1699, lng: 79.8884, district: "Gampaha" },
+            { name: "Minuwangoda", icon: "🏘️", lat: 7.1663, lng: 79.9533, district: "Gampaha" },
+            { name: "Avissawella", icon: "⛰️", lat: 6.9522, lng: 80.2126, district: "Colombo" },
+            { name: "Horana", icon: "🌴", lat: 6.7158, lng: 80.0626, district: "Kalutara" },
+            { name: "Gampola", icon: "⛰️", lat: 7.1643, lng: 80.5696, district: "Kandy" },
+            { name: "Peradeniya", icon: "🌸", lat: 7.2654, lng: 80.5925, district: "Kandy" },
+            { name: "Nawalapitiya", icon: "🚂", lat: 7.0493, lng: 80.5335, district: "Kandy" },
+            { name: "Habarana", icon: "🐘", lat: 8.0365, lng: 80.7517, district: "Anuradhapura" },
+            { name: "Pasikudah", icon: "🏖️", lat: 7.9292, lng: 81.5611, district: "Batticaloa" },
+            { name: "Nilaveli", icon: "🏖️", lat: 8.6939, lng: 81.1869, district: "Trincomalee" },
+            { name: "Ampara", icon: "🌾", lat: 7.2975, lng: 81.6820, district: "Eastern Province" },
+            { name: "Kalmunai", icon: "🌊", lat: 7.4167, lng: 81.8167, district: "Ampara" },
+            { name: "Embilipitiya", icon: "🐘", lat: 6.3422, lng: 80.8508, district: "Ratnapura" },
+            { name: "Balangoda", icon: "⛰️", lat: 6.6486, lng: 80.6989, district: "Ratnapura" },
+            { name: "Belihuloya", icon: "💦", lat: 6.7128, lng: 80.7792, district: "Ratnapura" },
+            { name: "Kalpitiya", icon: "🐬", lat: 8.2333, lng: 79.7667, district: "Puttalam" },
+            { name: "Vavuniya", icon: "🚂", lat: 8.7514, lng: 80.4971, district: "Northern Province" },
+            { name: "Mannar", icon: "🌴", lat: 8.9806, lng: 79.9042, district: "Northern Province" },
+            { name: "Kilinochchi", icon: "🌿", lat: 9.3961, lng: 80.3982, district: "Northern Province" },
+            { name: "Mullaitivu", icon: "🌊", lat: 9.2671, lng: 80.8142, district: "Northern Province" }
         ];
 
         const ROUTE_ORIGIN_HUBS = {
@@ -1861,6 +1911,7 @@
             const cardInput = document.getElementById('cardStartLocationInput');
             if (sideInput) sideInput.value = '';
             if (cardInput) cardInput.value = '';
+            toggleClearOriginButtons(false);
 
             const sideLabel = document.getElementById('activeOriginLabel');
             if (sideLabel) sideLabel.textContent = '📍 My Location';
@@ -1883,6 +1934,45 @@
             });
         }
 
+        function normalizePlaceName(str) {
+            return (str || '')
+                .toLowerCase()
+                .replace(/th/g, 't')
+                .replace(/dh/g, 'd')
+                .replace(/bh/g, 'b')
+                .replace(/gh/g, 'g')
+                .replace(/kh/g, 'k')
+                .replace(/ph/g, 'p')
+                .replace(/[^a-z0-9]/g, '');
+        }
+
+        function toggleClearOriginButtons(show) {
+            const b1 = document.getElementById('btnClearSideOrigin');
+            const b2 = document.getElementById('btnClearCardOrigin');
+            if (b1) b1.style.display = show ? 'block' : 'none';
+            if (b2) b2.style.display = show ? 'block' : 'none';
+        }
+
+        function clearTypedOrigin() {
+            const sideInput = document.getElementById('startLocationInput');
+            const cardInput = document.getElementById('cardStartLocationInput');
+            if (sideInput) sideInput.value = '';
+            if (cardInput) cardInput.value = '';
+            toggleClearOriginButtons(false);
+            currentOriginCoords = cachedUserGpsCoords;
+            currentOriginLabel = '📍 My Location';
+            activeOriginMode = 'gps';
+            const sideLabel = document.getElementById('activeOriginLabel');
+            if (sideLabel) sideLabel.textContent = '📍 My Location';
+            const cardBadge = document.getElementById('routeOriginStatusBadge');
+            if (cardBadge) cardBadge.textContent = '📍 My Location';
+            updateMyLocationButtons(true);
+            if (currentSelectedSpot) {
+                updateSpotDistancePreview(currentSelectedSpot.coords);
+            }
+            if (sideInput) sideInput.focus();
+        }
+
         function updateMyLocationButtons(isGpsActive) {
             const sideBtn = document.getElementById('btnSidePickMyLocation');
             const cardBtn = document.getElementById('btnCardPickMyLocation');
@@ -1903,55 +1993,85 @@
             if (cardDrop) cardDrop.style.display = 'none';
         }
 
+        function findLocalTownMatches(query) {
+            const trimmed = (query || '').trim().toLowerCase();
+            if (!trimmed) return SRI_LANKA_TOWNS.slice(0, 8);
+            const normQuery = normalizePlaceName(trimmed);
+            return SRI_LANKA_TOWNS.filter(function(t) {
+                const nameLow = t.name.toLowerCase();
+                const distLow = (t.district || '').toLowerCase();
+                return nameLow.includes(trimmed) ||
+                       distLow.includes(trimmed) ||
+                       (normQuery.length >= 2 && normalizePlaceName(t.name).includes(normQuery));
+            });
+        }
+
         function handleStartLocationInput(query, isCard) {
             const dropdown = document.getElementById(isCard ? 'cardLocationDropdown' : 'startLocationDropdown');
             if (!dropdown) return;
 
-            const trimmed = (query || '').trim().toLowerCase();
-            let matches = [];
-            if (!trimmed) {
-                matches = SRI_LANKA_TOWNS.slice(0, 8);
-            } else {
-                matches = SRI_LANKA_TOWNS.filter(function(t) {
-                    return t.name.toLowerCase().includes(trimmed) || (t.district && t.district.toLowerCase().includes(trimmed));
-                });
-            }
+            const raw = (query || '').trim();
+            toggleClearOriginButtons(raw.length > 0);
 
-            if (matches.length === 0) {
-                dropdown.innerHTML = `
-                    <div class="px-3 py-2 text-xs text-gray-500 flex items-center justify-between">
-                        <span>Searching map for "${query}"...</span>
-                    </div>
-                `;
-                dropdown.style.display = 'block';
+            // Sync the other input box silently
+            const otherInput = document.getElementById(isCard ? 'startLocationInput' : 'cardStartLocationInput');
+            if (otherInput && otherInput.value !== query) otherInput.value = query;
 
-                if (trimmed.length >= 2) {
+            const matches = findLocalTownMatches(raw);
+
+            if (matches.length > 0) {
+                renderTownSuggestions(matches, isCard);
+                // If user typed 3+ chars and few local matches, also enrich asynchronously with Photon/OSM
+                if (raw.length >= 3 && matches.length < 3) {
                     clearTimeout(locationSearchDebounce);
                     locationSearchDebounce = setTimeout(function() {
-                        fetchNominatimTowns(trimmed, isCard);
-                    }, 400);
+                        fetchRemotePlaces(raw, isCard, matches);
+                    }, 350);
                 }
                 return;
             }
 
-            renderTownSuggestions(matches, isCard);
+            dropdown.innerHTML = `
+                <div class="px-3 py-2 text-xs text-gray-500 flex items-center gap-2">
+                    <i class="fa-solid fa-spinner fa-spin text-blue-500"></i>
+                    <span>Searching Sri Lanka map for "${raw}"...</span>
+                </div>
+            `;
+            dropdown.style.display = 'block';
+
+            if (raw.length >= 2) {
+                clearTimeout(locationSearchDebounce);
+                locationSearchDebounce = setTimeout(function() {
+                    fetchRemotePlaces(raw, isCard, []);
+                }, 350);
+            }
         }
 
         function renderTownSuggestions(towns, isCard) {
             const dropdown = document.getElementById(isCard ? 'cardLocationDropdown' : 'startLocationDropdown');
             if (!dropdown) return;
 
+            if (!towns || towns.length === 0) {
+                dropdown.innerHTML = `
+                    <div class="px-3 py-2 text-xs text-gray-500 text-center">
+                        No matching place found in Sri Lanka. Try nearby town name.
+                    </div>
+                `;
+                dropdown.style.display = 'block';
+                return;
+            }
+
             dropdown.innerHTML = towns.map(function(t) {
                 const escapedName = t.name.replace(/'/g, "\\'");
                 return `
                     <button type="button" 
                             onmousedown="selectTownSuggestion('${escapedName}', ${t.lat}, ${t.lng})" 
-                            class="w-full text-left px-3 py-1.5 hover:bg-blue-50 text-xs flex items-center justify-between transition cursor-pointer border-b border-gray-100 last:border-b-0">
-                        <span class="font-bold text-gray-800 flex items-center gap-1.5">
+                            class="w-full text-left px-3 py-2 hover:bg-blue-50 text-xs flex items-center justify-between transition cursor-pointer border-b border-gray-100 last:border-b-0">
+                        <span class="font-bold text-gray-800 flex items-center gap-2 min-w-0 truncate">
                             <span>${t.icon || '📍'}</span>
-                            <span>${t.name}</span>
+                            <span class="truncate">${t.name}</span>
                         </span>
-                        <span class="text-[10px] text-gray-400 font-medium">${t.district || 'Sri Lanka'}</span>
+                        <span class="text-[10px] text-gray-400 font-medium flex-shrink-0 ml-2">${t.district || 'Sri Lanka'}</span>
                     </button>
                 `;
             }).join('');
@@ -1968,6 +2088,7 @@
             const cardInput = document.getElementById('cardStartLocationInput');
             if (sideInput) sideInput.value = name;
             if (cardInput) cardInput.value = name;
+            toggleClearOriginButtons(true);
 
             const sideLabel = document.getElementById('activeOriginLabel');
             if (sideLabel) sideLabel.textContent = name;
@@ -1987,27 +2108,72 @@
             }
         }
 
-        async function fetchNominatimTowns(query, isCard) {
+        async function fetchRemotePlaces(query, isCard, existingMatches) {
+            const baseList = existingMatches || [];
+            let remoteResults = [];
+
+            // 1. Try Photon (OSM-based fast autocomplete API, CORS-friendly, supports fuzzy search)
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=lk&limit=5&q=${encodeURIComponent(query)}`);
-                if (!res.ok) return;
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const results = data.map(function(item) {
-                        const shortName = item.display_name.split(',')[0];
-                        return {
-                            name: shortName,
-                            icon: '📍',
-                            lat: parseFloat(item.lat),
-                            lng: parseFloat(item.lon),
-                            district: item.display_name.split(',').slice(1, 3).join(',').trim()
-                        };
-                    });
-                    renderTownSuggestions(results, isCard);
+                const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&bbox=79.5,5.8,81.9,9.9&limit=6&lang=en`;
+                const res = await fetch(photonUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.features && data.features.length > 0) {
+                        remoteResults = data.features.map(function(f) {
+                            const p = f.properties || {};
+                            const coords = (f.geometry && f.geometry.coordinates) || [80.7, 7.8];
+                            const sub = [p.city || p.town || p.county, p.state].filter(Boolean).join(', ');
+                            return {
+                                name: p.name || query,
+                                icon: '📍',
+                                lat: coords[1],
+                                lng: coords[0],
+                                district: sub || 'Sri Lanka'
+                            };
+                        });
+                    }
                 }
             } catch (e) {
-                console.warn('Geocoding search error:', e);
+                console.warn('Photon search fallback:', e);
             }
+
+            // 2. Fallback to Nominatim if Photon returned nothing
+            if (remoteResults.length === 0) {
+                try {
+                    const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=lk&limit=5&q=${encodeURIComponent(query)}`;
+                    const res = await fetch(nomUrl);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            remoteResults = data.map(function(item) {
+                                const shortName = item.display_name.split(',')[0];
+                                return {
+                                    name: shortName,
+                                    icon: '📍',
+                                    lat: parseFloat(item.lat),
+                                    lng: parseFloat(item.lon),
+                                    district: item.display_name.split(',').slice(1, 3).join(',').trim()
+                                };
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Nominatim search fallback:', e);
+                }
+            }
+
+            // Deduplicate and merge with existing local matches
+            const seen = new Set(baseList.map(function(x) { return normalizePlaceName(x.name); }));
+            const merged = baseList.slice();
+            remoteResults.forEach(function(r) {
+                const key = normalizePlaceName(r.name);
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    merged.push(r);
+                }
+            });
+
+            renderTownSuggestions(merged, isCard);
         }
 
         function handleInputKeyDown(e, isCard) {
@@ -2018,9 +2184,55 @@
                     const firstBtn = dropdown.querySelector('button');
                     if (firstBtn) {
                         firstBtn.dispatchEvent(new MouseEvent('mousedown'));
+                        return;
                     }
                 }
+                const inputEl = document.getElementById(isCard ? 'cardStartLocationInput' : 'startLocationInput');
+                if (inputEl && inputEl.value.trim()) {
+                    resolveTypedCityAndRun(inputEl.value.trim(), false);
+                }
             }
+        }
+
+        async function resolveTypedCityAndRun(typedCity, drawRouteAfter) {
+            const localMatches = findLocalTownMatches(typedCity);
+            if (localMatches.length > 0) {
+                const best = localMatches[0];
+                selectTownSuggestion(best.name, best.lat, best.lng);
+                return;
+            }
+
+            showMapToast('🔍 Finding "' + typedCity + '" on Sri Lanka map...');
+            // Try Photon then Nominatim
+            try {
+                const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(typedCity)}&bbox=79.5,5.8,81.9,9.9&limit=1&lang=en`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.features && data.features.length > 0) {
+                        const f = data.features[0];
+                        const name = (f.properties && f.properties.name) || typedCity;
+                        const coords = f.geometry.coordinates;
+                        selectTownSuggestion(name, coords[1], coords[0]);
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=lk&limit=1&q=${encodeURIComponent(typedCity)}`);
+                if (res2.ok) {
+                    const data2 = await res2.json();
+                    if (data2 && data2.length > 0) {
+                        const item = data2[0];
+                        const name = item.display_name.split(',')[0];
+                        selectTownSuggestion(name, parseFloat(item.lat), parseFloat(item.lon));
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            showMapToast('⚠️ Could not find "' + typedCity + '". Pick from suggestions or click My Location.');
+            if (drawRouteAfter) _doGetDirections();
         }
 
         document.addEventListener('click', function(e) {
@@ -2045,38 +2257,13 @@
         }
 
         function getDirectionsForCurrentSpot() {
-            // Read whatever the user typed in the input boxes (may not have been dropdown-selected)
             const sideInputVal = (document.getElementById('startLocationInput') || {}).value || '';
             const cardInputVal = (document.getElementById('cardStartLocationInput') || {}).value || '';
             const typedCity = (sideInputVal || cardInputVal).trim();
 
-            // If a city was typed but not yet set via dropdown click, resolve it now
-            if (typedCity && (!currentOriginCoords || currentOriginLabel !== typedCity)) {
-                // Try exact/partial match in local towns list first
-                const matched = SRI_LANKA_TOWNS.find(function(t) {
-                    return t.name.toLowerCase() === typedCity.toLowerCase() ||
-                           t.name.toLowerCase().startsWith(typedCity.toLowerCase());
-                });
-                if (matched) {
-                    // Set origin synchronously and then draw route
-                    selectTownSuggestion(matched.name, matched.lat, matched.lng);
-                    return; // selectTownSuggestion calls calculateAndDrawRoute internally when target exists
-                }
-                // Not in local list → geocode via Nominatim then draw route
-                showMapToast('🔍 Geocoding "' + typedCity + '"...');
-                fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=lk&limit=1&q=' + encodeURIComponent(typedCity))
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        if (data && data.length > 0) {
-                            const item = data[0];
-                            const name = item.display_name.split(',')[0];
-                            selectTownSuggestion(name, parseFloat(item.lat), parseFloat(item.lon));
-                        } else {
-                            showMapToast('⚠️ Location not found. Using GPS or default.');
-                            _doGetDirections();
-                        }
-                    })
-                    .catch(function() { _doGetDirections(); });
+            // If user typed a city name, ensure it's resolved & used (never fall back to random GPS/Airport)
+            if (typedCity && (!currentOriginCoords || normalizePlaceName(currentOriginLabel) !== normalizePlaceName(typedCity))) {
+                resolveTypedCityAndRun(typedCity, true);
                 return;
             }
 
