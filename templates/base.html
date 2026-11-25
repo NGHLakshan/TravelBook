@@ -761,12 +761,6 @@
                                 <span id="destWhatsappBtnText">Inquire Private Cab to this Place</span>
                             </a>
 
-                            <!-- 4. Notice when location is Vehicle / Cab only (No Tour Packages) -->
-                            <div id="destVehicleServiceNotice" style="display:none;" class="text-[11px] font-bold text-blue-900 bg-blue-50/90 border border-blue-200/80 rounded-xl px-2.5 py-1.5 text-center flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-van-shuttle text-blue-600 text-xs"></i>
-                                <span>Private Cab & Chauffeur service available for this destination</span>
-                            </div>
-
                             <!-- Helper Hint -->
                             <p class="text-[10px] text-gray-400 text-center pt-0.5">
                                 <i class="fa-solid fa-map-pin text-[9px] mr-1 text-orange-500"></i> Click any pin on the map to view its details
@@ -1735,38 +1729,38 @@
             // Update road distance preview from user live GPS
             updateSpotDistancePreview(spot.coords);
 
-            // Action Buttons: Only Ella, Nuwara Eliya, and Yala have tour packages!
-            // All other destinations only offer private vehicles / cabs.
+            // Action Buttons:
+            // 1. Ella, Nuwara Eliya, Yala -> Show Tour Packages on website
+            // 2. All other destinations -> Show Vehicle & Chauffeur Packages on website
             const pkgHub = getPackageHub(spot, region);
             const actBtn = document.getElementById('destActionBtn');
             const actText = document.getElementById('destActionBtnText');
             const waBtn = document.getElementById('destWhatsappBtn');
             const waText = document.getElementById('destWhatsappBtnText');
-            const vehicleNotice = document.getElementById('destVehicleServiceNotice');
+
+            if (actBtn) actBtn.style.display = 'flex';
 
             if (pkgHub) {
-                // Ella, Nuwara Eliya, Yala -> Show Tour Packages button + Cab button
-                if (actBtn) actBtn.style.display = 'flex';
+                // Ella, Nuwara Eliya, Yala -> Tour packages for this area
                 if (actText) actText.textContent = pkgHub.label;
-                if (vehicleNotice) vehicleNotice.style.display = 'none';
-
-                if (waText) waText.textContent = `Inquire Private Cab to ${spot.name}`;
-                if (waBtn) {
-                    const msg = `Hello CeylonGo, I would like to plan a visit / private chauffeur ride to ${spot.name} (${spot.type || 'Attraction'})!`;
-                    waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(msg);
-                    waBtn.className = "w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer text-center";
+                if (actBtn) {
+                    actBtn.className = "w-full py-2.5 px-3 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer";
                 }
             } else {
-                // ANY OTHER DESTINATION -> No tour packages! Vehicle / Cab only!
-                if (actBtn) actBtn.style.display = 'none';
-                if (vehicleNotice) vehicleNotice.style.display = 'flex';
-
-                if (waText) waText.textContent = `🚗 Book Private Vehicle / Cab to ${spot.name}`;
-                if (waBtn) {
-                    const msg = `Hello CeylonGo, I would like to book a private vehicle / cab transfer to ${spot.name} (${spot.type || 'Destination'})!`;
-                    waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(msg);
-                    waBtn.className = "w-full py-2.5 px-3 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer text-center";
+                // ANY OTHER DESTINATION -> Show Vehicle Packages on the website!
+                if (actText) actText.textContent = `🚐 View Vehicle & Chauffeur Packages`;
+                if (actBtn) {
+                    actBtn.className = "w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer";
                 }
+            }
+
+            if (waText) {
+                waText.textContent = `Inquire Private Cab to ${spot.name}`;
+            }
+            if (waBtn) {
+                const msg = `Hello CeylonGo, I would like to plan a visit / private chauffeur ride to ${spot.name} (${spot.type || 'Attraction'})!`;
+                waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(msg);
+                waBtn.className = "w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer text-center";
             }
         }
 
@@ -1869,14 +1863,14 @@
             const url = new URL(window.location.origin + '/');
             const pkgHub = getPackageHub(currentSelectedSpot, currentSelectedRegion);
             if (pkgHub) {
+                // Tour packages for Ella, Nuwara Eliya, or Yala
                 url.searchParams.set('q', pkgHub.query);
                 if (pkgHub.catSlug) {
                     url.searchParams.set('cat', pkgHub.catSlug);
                 }
-            } else if (currentSelectedSpot && currentSelectedSpot.name) {
-                url.searchParams.set('q', currentSelectedSpot.name);
-            } else if (currentSelectedRegion && currentSelectedRegion.catSlug) {
-                url.searchParams.set('cat', currentSelectedRegion.catSlug);
+            } else {
+                // Other areas -> Show the vehicle & chauffeur packages on the website!
+                url.searchParams.set('cat', 'bespoke-journeys');
             }
             url.hash = 'packages-section';
             window.location.href = url.toString();
@@ -1905,10 +1899,12 @@
             closeMapModal();
 
             const url = new URL(window.location.origin + '/');
-            if (region.catSlug) {
-                url.searchParams.set('cat', region.catSlug);
-            } else if (region.filterQuery) {
-                url.searchParams.set('q', region.filterQuery);
+            const pkgHub = getPackageHub(null, region);
+            if (pkgHub) {
+                url.searchParams.set('q', pkgHub.query);
+                if (pkgHub.catSlug) url.searchParams.set('cat', pkgHub.catSlug);
+            } else {
+                url.searchParams.set('cat', 'bespoke-journeys');
             }
             url.hash = 'packages-section';
             window.location.href = url.toString();
