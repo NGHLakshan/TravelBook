@@ -761,6 +761,12 @@
                                 <span id="destWhatsappBtnText">Inquire Private Cab to this Place</span>
                             </a>
 
+                            <!-- 4. Notice when location is Vehicle / Cab only (No Tour Packages) -->
+                            <div id="destVehicleServiceNotice" style="display:none;" class="text-[11px] font-bold text-blue-900 bg-blue-50/90 border border-blue-200/80 rounded-xl px-2.5 py-1.5 text-center flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-van-shuttle text-blue-600 text-xs"></i>
+                                <span>Private Cab & Chauffeur service available for this destination</span>
+                            </div>
+
                             <!-- Helper Hint -->
                             <p class="text-[10px] text-gray-400 text-center pt-0.5">
                                 <i class="fa-solid fa-map-pin text-[9px] mr-1 text-orange-500"></i> Click any pin on the map to view its details
@@ -1729,21 +1735,103 @@
             // Update road distance preview from user live GPS
             updateSpotDistancePreview(spot.coords);
 
-            // Action Buttons
+            // Action Buttons: Only Ella, Nuwara Eliya, and Yala have tour packages!
+            // All other destinations only offer private vehicles / cabs.
+            const pkgHub = getPackageHub(spot, region);
+            const actBtn = document.getElementById('destActionBtn');
             const actText = document.getElementById('destActionBtnText');
-            if (actText) {
-                actText.textContent = `Explore Tours in ${region ? region.title.replace(/^[^\s]+\s*/, '') : 'this Area'}`;
-            }
-
             const waBtn = document.getElementById('destWhatsappBtn');
             const waText = document.getElementById('destWhatsappBtnText');
-            if (waText) {
-                waText.textContent = `Inquire Private Cab to ${spot.name}`;
+            const vehicleNotice = document.getElementById('destVehicleServiceNotice');
+
+            if (pkgHub) {
+                // Ella, Nuwara Eliya, Yala -> Show Tour Packages button + Cab button
+                if (actBtn) actBtn.style.display = 'flex';
+                if (actText) actText.textContent = pkgHub.label;
+                if (vehicleNotice) vehicleNotice.style.display = 'none';
+
+                if (waText) waText.textContent = `Inquire Private Cab to ${spot.name}`;
+                if (waBtn) {
+                    const msg = `Hello CeylonGo, I would like to plan a visit / private chauffeur ride to ${spot.name} (${spot.type || 'Attraction'})!`;
+                    waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(msg);
+                    waBtn.className = "w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer text-center";
+                }
+            } else {
+                // ANY OTHER DESTINATION -> No tour packages! Vehicle / Cab only!
+                if (actBtn) actBtn.style.display = 'none';
+                if (vehicleNotice) vehicleNotice.style.display = 'flex';
+
+                if (waText) waText.textContent = `🚗 Book Private Vehicle / Cab to ${spot.name}`;
+                if (waBtn) {
+                    const msg = `Hello CeylonGo, I would like to book a private vehicle / cab transfer to ${spot.name} (${spot.type || 'Destination'})!`;
+                    waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(msg);
+                    waBtn.className = "w-full py-2.5 px-3 rounded-xl bg-[#FF5B00] hover:bg-[#ea580c] text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer text-center";
+                }
             }
-            if (waBtn) {
-                const msg = `Hello CeylonGo, I would like to plan a visit / private chauffeur ride to ${spot.name} (${spot.type || 'Attraction'})!`;
-                waBtn.href = 'https://wa.me/94770000000?text=' + encodeURIComponent(msg);
+        }
+
+        // Helper: Check if destination is in Ella, Nuwara Eliya, or Yala (our 3 tour package hubs)
+        function getPackageHub(spot, region) {
+            const sName = ((spot && spot.name) || '').toLowerCase();
+            const sType = ((spot && spot.type) || '').toLowerCase();
+            const rTitle = ((region && region.title) || '').toLowerCase();
+            const rId = ((region && region.id) || '').toLowerCase();
+
+            // 1. Ella matches
+            if (sName.includes('ella') || sName.includes('nine arch') || sName.includes('ravana') || 
+                sName.includes('lipton') || sName.includes('diyaluma') || sName.includes('little adam') ||
+                (rId === 'ella_nuwara_eliya' && (sName.includes('rock') || sName.includes('bridge') || sName.includes('falls')))) {
+                return {
+                    hub: 'ella',
+                    title: 'Ella',
+                    query: 'Ella',
+                    catSlug: 'ella-signature',
+                    label: 'Explore Tours in Ella',
+                    icon: 'fa-compass'
+                };
             }
+
+            // 2. Nuwara Eliya matches
+            if (sName.includes('nuwara eliya') || sName.includes('pedro') || sName.includes('gregory') || 
+                sName.includes('horton') || sName.includes('world’s end') || sName.includes('worlds end') ||
+                sName.includes('st. clair') || sName.includes('ramboda') ||
+                (rId === 'ella_nuwara_eliya' && (sName.includes('lake') || sName.includes('tea') || sName.includes('plains')))) {
+                return {
+                    hub: 'nuwara_eliya',
+                    title: 'Nuwara Eliya',
+                    query: 'Nuwara Eliya',
+                    catSlug: 'ella-signature',
+                    label: 'Explore Tours in Nuwara Eliya',
+                    icon: 'fa-mountain'
+                };
+            }
+
+            // 3. Yala Safari matches
+            if (sName.includes('yala') || sType.includes('yala') || sName.includes('bundala') || sName.includes('udawalawe')) {
+                return {
+                    hub: 'yala',
+                    title: 'Yala Safari',
+                    query: 'Yala',
+                    catSlug: 'wildlife-encounters',
+                    label: 'Explore Yala Safari Packages',
+                    icon: 'fa-paw'
+                };
+            }
+
+            // Fallback for general ella_nuwara_eliya region overview
+            if (rId === 'ella_nuwara_eliya') {
+                return {
+                    hub: 'ella',
+                    title: 'Ella & Hills',
+                    query: 'Ella',
+                    catSlug: 'ella-signature',
+                    label: 'Explore Tours in Ella',
+                    icon: 'fa-compass'
+                };
+            }
+
+            // All other destinations (Sigiriya, Kandy, Colombo, Galle, Jaffna, Mirissa, etc.) have NO tour packages -> Vehicle only!
+            return null;
         }
 
         function updateSpotDistancePreview(destCoords) {
@@ -1779,7 +1867,13 @@
         function viewSpotTours() {
             closeMapModal();
             const url = new URL(window.location.origin + '/');
-            if (currentSelectedSpot && currentSelectedSpot.name) {
+            const pkgHub = getPackageHub(currentSelectedSpot, currentSelectedRegion);
+            if (pkgHub) {
+                url.searchParams.set('q', pkgHub.query);
+                if (pkgHub.catSlug) {
+                    url.searchParams.set('cat', pkgHub.catSlug);
+                }
+            } else if (currentSelectedSpot && currentSelectedSpot.name) {
                 url.searchParams.set('q', currentSelectedSpot.name);
             } else if (currentSelectedRegion && currentSelectedRegion.catSlug) {
                 url.searchParams.set('cat', currentSelectedRegion.catSlug);
